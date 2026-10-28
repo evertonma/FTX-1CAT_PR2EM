@@ -1,27 +1,30 @@
 # -*- coding: utf-8 -*-
 """
-Yaesu FTX-1 - tabela do menu (comando EX) e camada serial CAT.
+Tabela do menu do Yaesu FTX-1 (comando EX).
 
-Fonte unica dos dados: "FTX-1 CAT Operation Reference Manual", rev. 2507-B
-  - Tabela 3 (MENU Chart), paginas 10-16  -> itens, faixas e codigos do P4
-  - Tabela 1 (CTCSS), pagina 8            -> frequencias de TONE FREQ
+Este módulo é SÓ DADOS + validação: não fala com a porta serial. A comunicação
+fica em `ftx1cat.cat.transport`; os demais comandos CAT (FA, MD, PC...) ficam
+em `ftx1cat.cat.commands`.
+
+Fonte única dos dados: "FTX-1 CAT Operation Reference Manual", rev. 2507-B
+  - Tabela 3 (MENU Chart), páginas 10-16  -> itens, faixas e códigos do P4
+  - Tabela 1 (CTCSS), página 8            -> frequências de TONE FREQ
   - Comandos EX (p.9), ID (p.17), VE (p.26)
 
-Pontos em que o manual e ambiguo ou se contradiz (tratados de forma conservadora):
+Pontos em que o manual é ambíguo ou se contradiz (tratados de forma conservadora):
   * O quadro do comando EX (p.9) diz P1 = 01-07, P2 = 01-07, P3 = 01-26, mas a
-    Tabela 3 tem P1 ate 11 e P3 ate 37. Aqui vale a Tabela 3.
-  * Itens cujo formato/unidade do P4 nao esta claro ficam SOMENTE LEITURA
+    Tabela 3 tem P1 até 11 e P3 até 37. Aqui vale a Tabela 3.
+  * Itens cujo formato/unidade do P4 não está claro ficam SOMENTE LEITURA
     (kind="ro"), com o texto do manual em `hint`.
   * Itens de texto (MY CALL, DTMF MEMORY, ...) ficam SOMENTE LEITURA (kind="text"):
-    o manual indica o numero de caracteres, mas nao diz como preencher os vazios.
-  * Itens sem parametro no manual (P4 = "-": DAY/MONTH/YEAR, SD CARD, RESET,
-    CALIBRATION, CERTIFICATION, FIRMWARE UPDATE, LAT/LONG, DEVICE LIST...) nao
+    o manual indica o número de caracteres, mas não diz como preencher os vazios.
+  * Itens sem parâmetro no manual (P4 = "-": DAY/MONTH/YEAR, SD CARD, RESET,
+    CALIBRATION, CERTIFICATION, FIRMWARE UPDATE, LAT/LONG, DEVICE LIST...) não
     entram na tabela.
 """
 
-import threading
-import time
 from dataclasses import dataclass, field
+from typing import Dict, List, Tuple
 
 
 # --------------------------------------------------------------------------
@@ -34,8 +37,8 @@ class Item:
     p3: int
     name: str
     kind: str                 # "enum" | "int" | "sint" | "ro" | "text"
-    digits: int               # numero de caracteres do P4
-    opts: list = field(default_factory=list)   # enum: [(codigo, rotulo)]
+    digits: int               # número de caracteres do P4
+    opts: List[Tuple[str, str]] = field(default_factory=list)   # enum: [(código, rótulo)]
     lo: int = 0
     hi: int = 0
     step: int = 1
@@ -45,8 +48,18 @@ class Item:
     path2: str = ""
 
     @property
-    def key(self):
+    def key(self) -> str:
+        """Chave P1P2P3 de 6 dígitos, como usada no comando EX."""
         return f"{self.p1:02d}{self.p2:02d}{self.p3:02d}"
+
+    @property
+    def path(self) -> str:
+        """Caminho legível: 'RADIO SETTING > MODE SSB > AF TREBLE GAIN'."""
+        return f"{self.path1} > {self.path2} > {self.name}"
+
+    def label_of(self, code: str) -> str:
+        """Rótulo de um código enum (ou o próprio código se não estiver na tabela)."""
+        return dict(self.opts).get(code, code)
 
     @property
     def writable(self):
@@ -68,7 +81,7 @@ class Item:
             try:
                 n = int(str(value).strip())
             except ValueError:
-                raise ValueError(f"{self.name}: '{value}' is not an integer")
+                raise ValueError(f"{self.name}: '{value}' is not an integer") from None
             if not (self.lo <= n <= self.hi):
                 raise ValueError(f"{self.name}: outside the range {self.lo} to {self.hi}")
             if self.kind == "int":
@@ -665,93 +678,29 @@ def _build():
 MENU = _build()
 
 
-def all_items():
+def all_items() -> List[Item]:
+    """Todos os itens, na ordem da Tabela 3."""
     return [it for _, _, groups in MENU for _, _, items in groups for it in items]
 
 
-BY_KEY = {it.key: it for it in all_items()}
+def find_group(p1: int, p2: int):
+    """Devolve (nome_p1, nome_p2, itens) do grupo, ou None."""
+    for q1, n1, groups in MENU:
+        for q2, n2, items in groups:
+            if (q1, q2) == (p1, p2):
+                return n1, n2, items
+    return None
 
 
-# --------------------------------------------------------------------------
-# Camada serial CAT
-# --------------------------------------------------------------------------
-class CatError(Exception):
-    pass
+def search_items(query: str, limit: int = 150) -> List[Item]:
+    """Busca por palavras (todas precisam aparecer no nome ou no caminho)."""
+    tokens = query.strip().lower().split()
+    if not tokens:
+        return []
+    return [it for it in ALL_ITEMS
+            if all(t in it.path.lower() for t in tokens)][:limit]
 
 
-class Radio:
-    """Fala com o rádio por qualquer objeto tipo pyserial.Serial.
+ALL_ITEMS: List[Item] = all_items()
+BY_KEY: Dict[str, Item] = {it.key: it for it in ALL_ITEMS}
 
-    Todo comando termina em ';'. A resposta de leitura repete o comando
-    (ex.: 'EX010101+05;'). Quadros que nao comecam com o prefixo esperado
-    (por exemplo, informacao automatica) sao descartados.
-    """
-
-    def __init__(self, ser, timeout=0.8, gap=0.02, logger=None):
-        self.ser = ser
-        self.timeout = timeout
-        self.gap = gap
-        self.logger = logger
-        self.buf = b""
-        self.lock = threading.RLock()
-
-    def _log(self, direction, text):
-        if self.logger:
-            self.logger(direction, text)
-
-    def _write(self, cmd):
-        self._log("TX", cmd)
-        self.ser.write(cmd.encode("ascii"))
-
-    def _next_frame(self, deadline):
-        while True:
-            i = self.buf.find(b";")
-            if i >= 0:
-                frame, self.buf = self.buf[:i + 1], self.buf[i + 1:]
-                return frame.decode("ascii", "replace")
-            if time.monotonic() >= deadline:
-                return None
-            n = getattr(self.ser, "in_waiting", 0) or 1
-            chunk = self.ser.read(n)
-            if chunk:
-                self.buf += chunk
-            else:
-                time.sleep(0.005)
-
-    def query(self, cmd, prefix):
-        with self.lock:
-            self.ser.reset_input_buffer()
-            self.buf = b""
-            self._write(cmd)
-            deadline = time.monotonic() + self.timeout
-            while True:
-                frame = self._next_frame(deadline)
-                if frame is None:
-                    raise CatError(f"no response to {cmd}")
-                self._log("RX", frame)
-                if frame.startswith(prefix):
-                    return frame
-
-    def send(self, cmd):
-        with self.lock:
-            self._write(cmd)
-            time.sleep(self.gap)
-
-    # -- menu (EX) ---------------------------------------------------------
-    def read_menu(self, item):
-        frame = self.query(f"EX{item.key};", f"EX{item.key}")
-        return frame[len("EX") + 6:-1]
-
-    def write_menu(self, item, raw):
-        """Grava e devolve o valor relido (CatError se nao houver resposta)."""
-        self.send(f"EX{item.key}{raw};")
-        return self.read_menu(item)
-
-    # -- identificacao -----------------------------------------------------
-    def identify(self):
-        """ID; -> 'ID0840;' (valor fixo segundo o manual)."""
-        return self.query("ID;", "ID")[2:-1]
-
-    def firmware(self, which=0):
-        """VE<n>; -> versao (0 = MAIN CPU)."""
-        return self.query(f"VE{which};", f"VE{which}")[3:-1]

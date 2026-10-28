@@ -1,13 +1,16 @@
 # Yaesu FTX-1 CAT Menu — by PR2EM
 
-![Status: v0.1 Alpha](https://img.shields.io/badge/status-v0.1--alpha-orange)
+![Status: v0.2 Beta](https://img.shields.io/badge/status-v0.2--beta-orange)
 ![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue)
 ![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blueviolet)
 ![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey)
+![CI](https://github.com/evertonma/FTX-1CAT_PR2EM/actions/workflows/ci.yml/badge.svg)
 
 > A Python desktop application for reading and controlling the Yaesu FTX-1 transceiver through its serial CAT interface. It brings together quick operating controls, band selection, and CAT menu parameter management.
 
-> **Version:** 0.1 Alpha. This project is under development. Use care when writing settings to your radio.
+> **Version:** 0.2 Beta. This project is under development. Use care when writing settings to your radio.
+
+[Versão em Português](#versão-em-português)
 
 ## 📷 Screenshot
 
@@ -15,7 +18,7 @@
 
 ## 🚀 Features
 
-- **CAT connection:** automatically detects and selects the Silicon Labs CP2105 `Enhanced COM Port` when available. The connection opens after you click **Connect**.
+- **CAT connection:** automatically detects and selects the Silicon Labs CP2105 `Enhanced COM Port` when available, and remembers the last port and baud rate you used.
 - **Radio identification:** reads the radio ID and MAIN firmware version after connecting.
 - **MAIN tuning:** displays the current frequency and periodically tracks changes made with the radio's physical dial.
 - **Direct frequency entry:** accepts abbreviated numeric input and applies separators automatically; for example, `1448` becomes `144.800.000 Hz` and `27555` becomes `27.555.000 Hz`.
@@ -25,9 +28,11 @@
 - **CH-STEP:** a vertical slider adapts to the current mode and supports dragging, clicking the scale, and mouse wheel adjustment.
 - **Quick controls:** sliders adjust RF POWER, D-LEVEL, D-PEAK, NB, and DNR and send changes while you adjust them.
 - **FUNC parameters:** select a parameter to adjust locally without changing the assignment of the radio's physical FUNC button.
-- **CAT menu:** search and read menu items; supported items can be written individually or in batches.
+- **CAT menu:** search and read menu items; supported items can be written individually or in batches. Edited values are highlighted until they are written.
 - **Backup and restore:** saves read settings to JSON and compares a backup with the current state before restoring compatible values.
-- **Communication log:** reports operation progress and can show CAT commands sent and received.
+- **Communication log:** reports operation progress, can show CAT commands sent and received, and can be copied to the clipboard. A log file is also kept on disk.
+- **Simulator mode:** `--simulate` runs the whole application against a built-in fake radio — no FTX-1 or serial port needed. Useful for trying the app and for development.
+- **Rejected commands are reported:** when the radio answers `?;` the app says so immediately instead of waiting for a timeout.
 
 ## 🛠️ Technologies and resources
 
@@ -39,17 +44,18 @@
 
 - **Tkinter / ttk:** graphical interface.
 - **pyserial 3.5:** serial port discovery and CAT communication.
-- **Python standard library:** including `threading`, `queue`, `json`, `pathlib`, and `tkinter`.
+- **Python standard library:** including `threading`, `queue`, `json`, `logging`, `pathlib`, and `tkinter`.
+- **pytest / ruff (development only):** automated tests and linting.
 
 ### AI development tools
 
-- **OpenAI Codex:** used as a development and maintenance assistant. The application does not call AI APIs at runtime and does not require an API key.
+- **OpenAI Codex** and **Claude Code:** used as development and maintenance assistants. See [AGENTS.md](AGENTS.md) for the project rules they follow. The application does not call AI APIs at runtime and does not require an API key.
 
 ## 📦 Requirements and installation
 
 ### Requirements
 
-- Windows 10/11 (the instructions below are for Windows).
+- Windows 10/11 (the instructions below are for Windows; Linux and macOS also work).
 - Python 3.8+ installed with Tcl/Tk.
 - Git.
 - Yaesu FTX-1 connected to the computer by USB using the **Enhanced COM Port (CAT-1)**.
@@ -63,25 +69,28 @@ Open PowerShell in the folder where you want to store the project:
 git clone https://github.com/evertonma/FTX-1CAT_PR2EM.git
 cd FTX-1CAT_PR2EM
 py -m venv .venv
-```
-
-Install the dependency inside the virtual environment:
-
-```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
 Run the application:
 
 ```powershell
-.\.venv\Scripts\python.exe ftx1_cat_menu.py
+.\.venv\Scripts\python.exe -m ftx1cat
 ```
+
+Try it without a radio:
+
+```powershell
+.\.venv\Scripts\python.exe -m ftx1cat --simulate
+```
+
+Other options: `--port COM4`, `--baud 38400`, `--debug` (writes CAT traffic to the log file), `--version`. The old entry point `python ftx1_cat_menu.py` still works.
 
 These commands do not require activating the virtual environment with `Activate.ps1`, avoiding PowerShell script execution policy issues.
 
-### `.env` configuration
+### Settings and log file
 
-No `.env` file or environment variables are required. The application uses no credentials, tokens, or external services. It configures Tcl/Tk paths automatically when available in the Python installation.
+No `.env` file or environment variables are required. The application stores its settings (last port, baud rate, window size, options) and a rotating log file in `%APPDATA%\FTX1CAT` on Windows (`~/.config/ftx1cat` on Linux/macOS).
 
 ## 💻 How to use
 
@@ -91,8 +100,9 @@ No `.env` file or environment variables are required. The application uses no cr
 4. In **Quick Controls**, use the on-screen dial or click the MAIN frequency display to enter a frequency. The display also follows changes made with the radio's physical dial.
 5. Click a band button to request that band from the radio. With **BAND STACK** enabled on the FTX-1, the radio recalls the frequency and mode stored in its Band Stack.
 6. Adjust the sliders to send RF POWER, D-LEVEL, D-PEAK, NB, DNR, or CH-STEP changes.
-7. To read or change other settings, open **CAT Menu**, choose a group, and use **Read**, **Write**, or the batch read/write commands.
+7. To read or change other settings, open **CAT Menu**, choose a group, and use **Read**, **Write**, or the batch read/write commands. Changed values are marked "Changed (not written)" until you write them.
 8. Use **Save Backup…** before larger changes. Restore compares values first and asks for confirmation before writing.
+9. **Stop** (top right) interrupts a long read, write, backup or restore.
 
 ### Frequency entry examples
 
@@ -110,6 +120,8 @@ Type digits without separators; punctuation is applied automatically.
 - If the radio does not respond, check that **Enhanced COM Port (CAT-1)** is selected, the baud rate matches `CAT-1 RATE`, and no other application has opened the port.
 - If Tkinter fails to start, install or repair Python with Tcl/Tk included.
 - Band selection depends on **BAND STACK** being enabled on the radio.
+- A "Rejected (?)" status means the radio answered `?;`: the item does not exist on this firmware or the value is invalid.
+- When reporting a problem, attach the log file from `%APPDATA%\FTX1CAT\ftx1cat.log` (run with `--debug` to include CAT traffic).
 
 ## 🧭 Simplified workflow
 
@@ -122,26 +134,55 @@ Start application
   → query radio again and refresh the interface
 ```
 
-Serial reads and writes run in the background to keep the interface responsive.
+All serial traffic runs on a single background thread (one command at a time), so the interface stays responsive and commands never overlap. Slider movements are coalesced: only the latest value is sent.
 
 ## 🗂️ Project structure
 
 ```text
 FTX-1CAT_PR2EM/
-├── ftx1_cat_menu.py   # Tkinter interface and CAT operations
-├── ftx1_menu.py       # EX menu item table and serial CAT transport
-├── requirements.txt   # Python dependencies
-├── LICENSE            # PolyForm Noncommercial License 1.0.0
-└── README.md          # This documentation
+├── ftx1cat/                 # Application package (python -m ftx1cat)
+│   ├── cat/                 # CAT protocol — no Tkinter here
+│   │   ├── menu.py          #   EX menu item table (data + validation)
+│   │   ├── commands.py      #   FA, MD, BS, PC, SS... command builders and tables
+│   │   ├── transport.py     #   Radio: serial communication
+│   │   └── simulator.py     #   FakeFTX1: fake radio for tests and --simulate
+│   └── ui/                  # Tkinter interface
+│       ├── app.py           #   main window, connection, log, job runner
+│       ├── quick_controls.py#   Quick Controls tab
+│       ├── menu_page.py     #   CAT Menu tab, backup/restore
+│       ├── worker.py        #   background serial job queue
+│       ├── settings.py      #   persistent settings
+│       └── widgets.py       #   scroll frame, dial, slider helpers
+├── tests/                   # pytest suite (runs without a radio)
+├── docs/                    # screenshot and project evaluation
+├── ftx1_cat_menu.py         # Compatibility launcher (v0.1 entry point)
+├── AGENTS.md                # Rules for AI coding assistants and contributors
+├── pyproject.toml           # Package metadata, pytest and ruff configuration
+├── requirements.txt         # Runtime dependency
+├── requirements-dev.txt     # Development dependencies (pytest, ruff)
+├── CHANGELOG.md             # Release notes
+├── LICENSE                  # PolyForm Noncommercial License 1.0.0
+└── README.md                # This documentation
 ```
+
+## 🧪 Development
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m ruff check ftx1cat tests   # lint
+.\.venv\Scripts\python.exe -m pytest                      # tests (uses the simulator)
+```
+
+On Linux the GUI tests need a display: `xvfb-run -a python -m pytest`. GitHub Actions runs lint and tests on Windows and Linux for every push.
 
 ## 🤝 Contributing
 
 1. Fork the repository.
 2. Create a branch for your change: `git switch -c feature/my-improvement`.
-3. Keep changes focused. For new CAT commands, include the corresponding FTX-1 manual reference.
-4. Before opening a pull request, check Python syntax and, when possible, test with a radio or a simulated serial interface.
-5. Include a behavior summary, reproduction steps, and screenshots for interface changes.
+3. Read [AGENTS.md](AGENTS.md): it explains where each kind of code lives and the rules for CAT commands and threading.
+4. For new CAT commands, include the corresponding FTX-1 manual reference, add the command to the simulator, and write a test.
+5. Run `ruff check` and `pytest` before opening a pull request. When possible, also test with a radio.
+6. Include a behavior summary, reproduction steps, and screenshots for interface changes, and add a line to `CHANGELOG.md`.
 
 Do not include personal backups, radio configuration files, virtual environments, or documents that cannot be redistributed. Contributions are subject to the project's noncommercial license unless the copyright holder agrees otherwise in writing.
 
@@ -151,7 +192,7 @@ This software is licensed under the **PolyForm Noncommercial License 1.0.0**. It
 
 ## 👤 Credits
 
-Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex**.
+Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex** and **Claude Code**.
 
 ---
 
@@ -161,7 +202,7 @@ Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex*
 
 > Aplicativo desktop em Python para consultar e controlar o transceptor Yaesu FTX-1 pela interface serial CAT. Reúne controles rápidos de operação, seleção de banda e gerenciamento dos parâmetros do menu CAT.
 
-> **Versão:** 0.1 Alfa. O projeto está em desenvolvimento. Tenha cuidado ao gravar configurações no rádio.
+> **Versão:** 0.2 Beta. O projeto está em desenvolvimento. Tenha cuidado ao gravar configurações no rádio.
 
 ## 📷 Captura de tela
 
@@ -169,7 +210,7 @@ Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex*
 
 ## 🚀 Funcionalidades
 
-- **Conexão CAT:** detecta e seleciona automaticamente a porta `Enhanced COM Port` do adaptador Silicon Labs CP2105 quando disponível. A conexão é aberta quando você clica em **Connect**.
+- **Conexão CAT:** detecta e seleciona automaticamente a porta `Enhanced COM Port` do adaptador Silicon Labs CP2105 quando disponível, e lembra a última porta e taxa usadas.
 - **Identificação do rádio:** lê o ID do rádio e a versão do firmware MAIN após a conexão.
 - **Sintonia MAIN:** exibe a frequência atual e acompanha periodicamente alterações feitas pelo dial físico do rádio.
 - **Entrada direta de frequência:** aceita números abreviados e aplica separadores automaticamente; por exemplo, `1448` se torna `144.800.000 Hz` e `27555` se torna `27.555.000 Hz`.
@@ -179,9 +220,11 @@ Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex*
 - **CH-STEP:** slider vertical que se adapta ao modo atual e aceita arraste, clique na escala e ajuste pelo scroll do mouse.
 - **Controles rápidos:** sliders ajustam RF POWER, D-LEVEL, D-PEAK, NB e DNR e enviam as alterações durante o ajuste.
 - **Parâmetros FUNC:** permite escolher localmente um parâmetro para ajustar sem alterar a função atribuída ao botão físico FUNC do rádio.
-- **Menu CAT:** pesquisa e lê itens do menu; os itens compatíveis podem ser gravados individualmente ou em lote.
+- **Menu CAT:** pesquisa e lê itens do menu; os itens compatíveis podem ser gravados individualmente ou em lote. Valores editados ficam destacados até serem gravados.
 - **Backup e restauração:** salva configurações lidas em JSON e compara um backup com o estado atual antes de restaurar valores compatíveis.
-- **Registro de comunicação:** informa o andamento das operações e pode exibir os comandos CAT enviados e recebidos.
+- **Registro de comunicação:** informa o andamento das operações, pode exibir os comandos CAT enviados e recebidos e pode ser copiado. Um arquivo de log também é mantido em disco.
+- **Modo simulador:** `--simulate` executa o aplicativo inteiro contra um rádio falso embutido — sem FTX-1 nem porta serial. Útil para conhecer o app e para desenvolvimento.
+- **Comandos recusados são informados:** quando o rádio responde `?;`, o app avisa na hora em vez de esperar o timeout.
 
 ## 🛠️ Tecnologias e recursos
 
@@ -193,17 +236,18 @@ Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex*
 
 - **Tkinter / ttk:** interface gráfica.
 - **pyserial 3.5:** descoberta de portas seriais e comunicação CAT.
-- **Biblioteca padrão do Python:** incluindo `threading`, `queue`, `json`, `pathlib` e `tkinter`.
+- **Biblioteca padrão do Python:** incluindo `threading`, `queue`, `json`, `logging`, `pathlib` e `tkinter`.
+- **pytest / ruff (só desenvolvimento):** testes automatizados e lint.
 
 ### Ferramentas de IA no desenvolvimento
 
-- **OpenAI Codex:** utilizado como assistente de desenvolvimento e manutenção. O aplicativo não chama APIs de IA durante a execução e não exige chave de API.
+- **OpenAI Codex** e **Claude Code:** utilizados como assistentes de desenvolvimento e manutenção. As regras que eles seguem estão em [AGENTS.md](AGENTS.md). O aplicativo não chama APIs de IA durante a execução e não exige chave de API.
 
 ## 📦 Pré-requisitos e instalação
 
 ### Pré-requisitos
 
-- Windows 10/11 (as instruções abaixo são para Windows).
+- Windows 10/11 (as instruções abaixo são para Windows; Linux e macOS também funcionam).
 - Python 3.8+ instalado com Tcl/Tk.
 - Git.
 - Yaesu FTX-1 conectado ao computador por USB usando a **Enhanced COM Port (CAT-1)**.
@@ -217,25 +261,28 @@ Abra o PowerShell na pasta onde deseja guardar o projeto:
 git clone https://github.com/evertonma/FTX-1CAT_PR2EM.git
 cd FTX-1CAT_PR2EM
 py -m venv .venv
-```
-
-Instale a dependência dentro do ambiente virtual:
-
-```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
 Inicie o aplicativo:
 
 ```powershell
-.\.venv\Scripts\python.exe ftx1_cat_menu.py
+.\.venv\Scripts\python.exe -m ftx1cat
 ```
+
+Para experimentar sem o rádio:
+
+```powershell
+.\.venv\Scripts\python.exe -m ftx1cat --simulate
+```
+
+Outras opções: `--port COM4`, `--baud 38400`, `--debug` (grava o tráfego CAT no arquivo de log), `--version`. O comando antigo `python ftx1_cat_menu.py` continua funcionando.
 
 Esses comandos não exigem ativar o ambiente virtual com `Activate.ps1`, evitando problemas com a política de execução de scripts do PowerShell.
 
-### Configuração de `.env`
+### Configurações e arquivo de log
 
-Não é necessário criar um arquivo `.env` nem configurar variáveis de ambiente. O aplicativo não usa credenciais, tokens ou serviços externos. Ele configura os caminhos do Tcl/Tk automaticamente quando disponíveis na instalação do Python.
+Não é necessário criar um arquivo `.env` nem configurar variáveis de ambiente. O aplicativo guarda as configurações (última porta, taxa, tamanho da janela, opções) e um arquivo de log rotativo em `%APPDATA%\FTX1CAT` no Windows (`~/.config/ftx1cat` no Linux/macOS).
 
 ## 💻 Como usar
 
@@ -245,8 +292,9 @@ Não é necessário criar um arquivo `.env` nem configurar variáveis de ambient
 4. Na aba **Quick Controls**, use o dial na tela ou clique no display de frequência MAIN para digitar uma frequência. O display também acompanha alterações feitas pelo dial físico do rádio.
 5. Clique em um botão de banda para solicitá-la ao rádio. Com **BAND STACK** habilitado no FTX-1, o rádio recupera a frequência e o modo armazenados no Band Stack.
 6. Ajuste os sliders para enviar alterações de RF POWER, D-LEVEL, D-PEAK, NB, DNR ou CH-STEP.
-7. Para ler ou alterar outros ajustes, abra **CAT Menu**, escolha um grupo e use **Read**, **Write** ou os comandos de leitura/gravação em lote.
+7. Para ler ou alterar outros ajustes, abra **CAT Menu**, escolha um grupo e use **Read**, **Write** ou os comandos de leitura/gravação em lote. Valores alterados ficam marcados como "Changed (not written)" até serem gravados.
 8. Use **Save Backup…** antes de alterações maiores. A restauração compara os valores primeiro e pede confirmação antes de gravar.
+9. **Stop** (canto superior direito) interrompe leituras, gravações, backup ou restauração longas.
 
 ### Exemplos de entrada de frequência
 
@@ -264,6 +312,8 @@ Digite os números sem separadores; a pontuação é aplicada automaticamente.
 - Se o rádio não responder, confirme a **Enhanced COM Port (CAT-1)**, a taxa correspondente a `CAT-1 RATE` e que nenhum outro aplicativo está usando a porta.
 - Se o Tkinter não iniciar, instale ou repare o Python incluindo Tcl/Tk.
 - A seleção de banda depende de **BAND STACK** estar habilitado no rádio.
+- O status "Rejected (?)" significa que o rádio respondeu `?;`: o item não existe neste firmware ou o valor é inválido.
+- Ao relatar um problema, anexe o arquivo `%APPDATA%\FTX1CAT\ftx1cat.log` (execute com `--debug` para incluir o tráfego CAT).
 
 ## 🧭 Fluxo simplificado
 
@@ -276,26 +326,55 @@ Iniciar aplicativo
   → consultar novamente o rádio e atualizar a interface
 ```
 
-As leituras e gravações seriais são executadas em segundo plano para manter a interface responsiva.
+Todo o tráfego serial roda em uma única thread de fundo (um comando por vez), mantendo a interface responsiva e sem comandos sobrepostos. Movimentos de slider são agrupados: só o último valor é enviado.
 
 ## 🗂️ Estrutura do projeto
 
 ```text
 FTX-1CAT_PR2EM/
-├── ftx1_cat_menu.py   # Interface Tkinter e operações CAT
-├── ftx1_menu.py       # Tabela de itens do menu EX e comunicação serial CAT
-├── requirements.txt   # Dependências Python
-├── LICENSE            # PolyForm Noncommercial License 1.0.0
-└── README.md          # Esta documentação
+├── ftx1cat/                 # Pacote do aplicativo (python -m ftx1cat)
+│   ├── cat/                 # Protocolo CAT — sem Tkinter aqui
+│   │   ├── menu.py          #   Tabela de itens do menu EX (dados + validação)
+│   │   ├── commands.py      #   Comandos FA, MD, BS, PC, SS... e tabelas de modos/bandas
+│   │   ├── transport.py     #   Radio: comunicação serial
+│   │   └── simulator.py     #   FakeFTX1: rádio falso para testes e --simulate
+│   └── ui/                  # Interface Tkinter
+│       ├── app.py           #   janela principal, conexão, log, execução de jobs
+│       ├── quick_controls.py#   aba Quick Controls
+│       ├── menu_page.py     #   aba CAT Menu, backup/restore
+│       ├── worker.py        #   fila de trabalhos seriais em segundo plano
+│       ├── settings.py      #   configurações persistentes
+│       └── widgets.py       #   painel rolável, dial, helpers de slider
+├── tests/                   # Testes pytest (rodam sem rádio)
+├── docs/                    # Captura de tela e avaliação do projeto
+├── ftx1_cat_menu.py         # Atalho de compatibilidade (entrada da v0.1)
+├── AGENTS.md                # Regras para assistentes de IA e contribuidores
+├── pyproject.toml           # Metadados do pacote, configuração de pytest e ruff
+├── requirements.txt         # Dependência de execução
+├── requirements-dev.txt     # Dependências de desenvolvimento (pytest, ruff)
+├── CHANGELOG.md             # Notas de versão
+├── LICENSE                  # PolyForm Noncommercial License 1.0.0
+└── README.md                # Esta documentação
 ```
+
+## 🧪 Desenvolvimento
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m ruff check ftx1cat tests   # lint
+.\.venv\Scripts\python.exe -m pytest                      # testes (usam o simulador)
+```
+
+No Linux os testes de interface precisam de um display: `xvfb-run -a python -m pytest`. O GitHub Actions roda lint e testes no Windows e no Linux a cada push.
 
 ## 🤝 Como contribuir
 
 1. Faça um fork do repositório.
 2. Crie uma branch para sua alteração: `git switch -c feature/minha-melhoria`.
-3. Mantenha as alterações objetivas. Para novos comandos CAT, inclua a referência correspondente ao manual do FTX-1.
-4. Antes de abrir um pull request, confira a sintaxe Python e, quando possível, teste com um rádio ou uma interface serial simulada.
-5. Inclua um resumo do comportamento, passos para reproduzir e capturas de tela para alterações na interface.
+3. Leia o [AGENTS.md](AGENTS.md): ele explica onde cada tipo de código mora e as regras para comandos CAT e threads.
+4. Para novos comandos CAT, inclua a referência ao manual do FTX-1, adicione o comando ao simulador e escreva um teste.
+5. Rode `ruff check` e `pytest` antes de abrir um pull request. Quando possível, teste também com o rádio.
+6. Inclua um resumo do comportamento, passos para reproduzir e capturas de tela para alterações na interface, e adicione uma linha ao `CHANGELOG.md`.
 
 Não inclua backups pessoais, arquivos de configuração do rádio, ambientes virtuais ou documentos que não possam ser redistribuídos. As contribuições seguem a licença não comercial do projeto, salvo autorização diferente por escrito do titular dos direitos autorais.
 
@@ -305,5 +384,4 @@ Este software está licenciado sob a **PolyForm Noncommercial License 1.0.0**. E
 
 ## 👤 Créditos
 
-Desenvolvido por **Everton Machado — PR2EM**, com assistência do **OpenAI Codex**.
-
+Desenvolvido por **Everton Machado — PR2EM**, com assistência do **OpenAI Codex** e do **Claude Code**.

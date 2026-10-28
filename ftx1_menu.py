@@ -437,11 +437,11 @@ def _display():
 
 def _unit():
     return [
-        en(1, "POSITION UNIT", "0=ddÂ°MM.mm'|1=ddÂ°mm'ss''"),
+        en(1, "POSITION UNIT", "0=dd°MM.mm'|1=dd°mm'ss''"),
         en(2, "DISTANCE UNIT", "0=km|1=mile"),
         ro(3, "SPEED UNIT", 1, "Manual lista os codigos 0: km/h, 1: knot, 3: mph (sem o 2)"),
         en(4, "ALTITUDE UNIT", "0=m|1=ft"),
-        en(5, "TEMP UNIT", "0=Â°C|1=Â°F"),
+        en(5, "TEMP UNIT", "0=°C|1=°F"),
         en(6, "RAIN UNIT", "0=mm|1=INCH"),
         ro(7, "WIND UNIT", 1, "Manual lista os codigos 0: m/s, 2: mph (sem o 1)"),
     ]
@@ -680,7 +680,7 @@ class CatError(Exception):
 
 
 class Radio:
-    """Fala com o rÃ¡dio por qualquer objeto tipo pyserial.Serial.
+    """Fala com o rádio por qualquer objeto tipo pyserial.Serial.
 
     Todo comando termina em ';'. A resposta de leitura repete o comando
     (ex.: 'EX010101+05;'). Quadros que nao comecam com o prefixo esperado
@@ -755,4 +755,3 @@ class Radio:
     def firmware(self, which=0):
         """VE<n>; -> versao (0 = MAIN CPU)."""
         return self.query(f"VE{which};", f"VE{which}")[3:-1]
-

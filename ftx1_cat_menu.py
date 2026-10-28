@@ -574,6 +574,12 @@ class App(tk.Tk):
             mhz_candidate = int(digits[:3]) * 1_000_000 + int(digits[3]) * 100_000
             if cls._frequency_in_rx_range(mhz_candidate):
                 return mhz_candidate
+        # Five digits are commonly entered as kHz (14400 -> 14.400 MHz).
+        # Check this before right-padding, which would turn 14400 into 144 MHz.
+        if len(digits) == 5:
+            khz_candidate = int(digits) * 1000
+            if cls._frequency_in_rx_range(khz_candidate):
+                return khz_candidate
         right_padded = int(digits.ljust(9, "0"))
         if not cls._frequency_in_rx_range(right_padded):
             # Compact kHz entry resolves values that would land in an RX gap.
@@ -601,13 +607,16 @@ class App(tk.Tk):
         ttk.Label(
             body,
             text=("Enter up to 9 digits. Punctuation is added automatically.\n"
-                  "Examples: 1448 becomes 144.800.000 Hz; 27555 becomes 27.555.000 Hz."),
+                  "Examples: 1448 becomes 144.800.000 Hz; 14400 becomes 14.400.000 Hz; "
+                  "27555 becomes 27.555.000 Hz."),
             justify="left", wraplength=360,
         ).pack(anchor="w", pady=(0, 8))
 
         frequency_var = tk.StringVar()
         entry = ttk.Entry(body, textvariable=frequency_var, width=20, font=("TkDefaultFont", 14))
         entry.pack(fill="x", pady=(0, 10))
+        preview_var = tk.StringVar(value="Target frequency: —")
+        ttk.Label(body, textvariable=preview_var, foreground=GRAY).pack(anchor="w", pady=(0, 8))
 
         def apply_frequency(_event=None):
             digits = "".join(char for char in frequency_var.get() if char.isdigit())[:9]
@@ -650,6 +659,14 @@ class App(tk.Tk):
             cursor = entry.index(tk.INSERT)
             digits_before_cursor = sum(char.isdigit() for char in original[:cursor])
             digits = "".join(char for char in original if char.isdigit())[:9]
+            if not digits:
+                preview_var.set("Target frequency: —")
+            else:
+                target = self._frequency_from_entry_digits(digits)
+                if self._frequency_in_rx_range(target):
+                    preview_var.set(f"Target frequency: {self._format_frequency(target)} Hz")
+                else:
+                    preview_var.set("Target frequency: out of range")
             right_padded = int(digits.ljust(9, "0")) if digits else 0
             khz_candidate = int(digits) * 1000 if digits else 0
             mhz_candidate = (int(digits[:3]) * 1_000_000 + int(digits[3]) * 100_000

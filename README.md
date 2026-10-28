@@ -1,6 +1,4 @@
-# Yaesu FTX-1 CAT Menu â€” by PR2EM
-
-# VersÃ£o em PortuguÃªs abaixo
+# Yaesu FTX-1 CAT Menu — by PR2EM
 
 ![Status: v0.1 Alpha](https://img.shields.io/badge/status-v0.1--alpha-orange)
 ![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue)
@@ -11,7 +9,7 @@
 
 > **Version:** 0.1 Alpha. This project is under development. Use care when writing settings to your radio.
 
-## ðŸš€ Features
+## 🚀 Features
 
 - **CAT connection:** automatically detects and selects the Silicon Labs CP2105 `Enhanced COM Port` when available. The connection opens after you click **Connect**.
 - **Radio identification:** reads the radio ID and MAIN firmware version after connecting.
@@ -27,7 +25,7 @@
 - **Backup and restore:** saves read settings to JSON and compares a backup with the current state before restoring compatible values.
 - **Communication log:** reports operation progress and can show CAT commands sent and received.
 
-## ðŸ› ï¸ Technologies and resources
+## 🛠️ Technologies and resources
 
 ### Language
 
@@ -43,7 +41,7 @@
 
 - **OpenAI Codex:** used as a development and maintenance assistant. The application does not call AI APIs at runtime and does not require an API key.
 
-## ðŸ“¦ Requirements and installation
+## 📦 Requirements and installation
 
 ### Requirements
 
@@ -81,7 +79,7 @@ These commands do not require activating the virtual environment with `Activate.
 
 No `.env` file or environment variables are required. The application uses no credentials, tokens, or external services. It configures Tcl/Tk paths automatically when available in the Python installation.
 
-## ðŸ’» How to use
+## 💻 How to use
 
 1. Connect and power on the FTX-1.
 2. Start the application. If detected, the CP2105 Enhanced COM Port is selected automatically.
@@ -90,7 +88,7 @@ No `.env` file or environment variables are required. The application uses no cr
 5. Click a band button to request that band from the radio. With **BAND STACK** enabled on the FTX-1, the radio recalls the frequency and mode stored in its Band Stack.
 6. Adjust the sliders to send RF POWER, D-LEVEL, D-PEAK, NB, DNR, or CH-STEP changes.
 7. To read or change other settings, open **CAT Menu**, choose a group, and use **Read**, **Write**, or the batch read/write commands.
-8. Use **Save Backupâ€¦** before larger changes. Restore compares values first and asks for confirmation before writing.
+8. Use **Save Backup…** before larger changes. Restore compares values first and asks for confirmation before writing.
 
 ### Frequency entry examples
 
@@ -109,31 +107,31 @@ Type digits without separators; punctuation is applied automatically.
 - If Tkinter fails to start, install or repair Python with Tcl/Tk included.
 - Band selection depends on **BAND STACK** being enabled on the radio.
 
-## ðŸ§­ Simplified workflow
+## 🧭 Simplified workflow
 
 ```text
 Start application
-  â†’ locate CAT-1 port
-  â†’ open serial connection and identify radio
-  â†’ read frequency, mode, and quick controls
-  â†’ send CAT commands as controls change
-  â†’ query radio again and refresh the interface
+  → locate CAT-1 port
+  → open serial connection and identify radio
+  → read frequency, mode, and quick controls
+  → send CAT commands as controls change
+  → query radio again and refresh the interface
 ```
 
 Serial reads and writes run in the background to keep the interface responsive.
 
-## ðŸ—‚ï¸ Project structure
+## 🗂️ Project structure
 
 ```text
 pr2em_ham/
-â”œâ”€â”€ ftx1_cat_menu.py   # Tkinter interface and CAT operations
-â”œâ”€â”€ ftx1_menu.py       # EX menu item table and serial CAT transport
-â”œâ”€â”€ requirements.txt   # Python dependencies
-â”œâ”€â”€ LICENSE            # PolyForm Noncommercial License 1.0.0
-â””â”€â”€ README.md          # This documentation
+├── ftx1_cat_menu.py   # Tkinter interface and CAT operations
+├── ftx1_menu.py       # EX menu item table and serial CAT transport
+├── requirements.txt   # Python dependencies
+├── LICENSE            # PolyForm Noncommercial License 1.0.0
+└── README.md          # This documentation
 ```
 
-## ðŸ¤ Contributing
+## 🤝 Contributing
 
 1. Fork the repository.
 2. Create a branch for your change: `git switch -c feature/my-improvement`.
@@ -143,39 +141,41 @@ pr2em_ham/
 
 Do not include personal backups, radio configuration files, virtual environments, or documents that cannot be redistributed. Contributions are subject to the project's noncommercial license unless the copyright holder agrees otherwise in writing.
 
-## ðŸ“„ License
+## 📄 License
 
 This software is licensed under the **PolyForm Noncommercial License 1.0.0**. It permits use, modification, and redistribution for noncommercial purposes. Commercial use requires separate permission from the copyright holder. See [LICENSE](LICENSE) and the [official license text](https://polyformproject.org/licenses/noncommercial/1.0.0/). This is a source-available license, not an OSI-approved open-source license.
 
-## ðŸ‘¤ Credits
+## 👤 Credits
 
-Developed by **Everton Machado â€” PR2EM**, with assistance from **OpenAI Codex**.
+Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex**.
 
 ---
 
-# Yaesu FTX-1 CAT Menu â€” by PR2EM (PortuguÃªs)
+# Versão em Português
 
-> Aplicativo desktop em Python para consultar e controlar o transceptor Yaesu FTX-1 pela interface serial CAT. ReÃºne controles rÃ¡pidos de operaÃ§Ã£o, seleÃ§Ã£o de banda e gerenciamento dos parÃ¢metros do menu CAT.
+## Yaesu FTX-1 CAT Menu — by PR2EM
 
-> **VersÃ£o:** 0.1 Alfa. O projeto estÃ¡ em desenvolvimento. Tenha cuidado ao gravar configuraÃ§Ãµes no rÃ¡dio.
+> Aplicativo desktop em Python para consultar e controlar o transceptor Yaesu FTX-1 pela interface serial CAT. Reúne controles rápidos de operação, seleção de banda e gerenciamento dos parâmetros do menu CAT.
 
-## ðŸš€ Funcionalidades
+> **Versão:** 0.1 Alfa. O projeto está em desenvolvimento. Tenha cuidado ao gravar configurações no rádio.
 
-- **ConexÃ£o CAT:** detecta e seleciona automaticamente a porta `Enhanced COM Port` do adaptador Silicon Labs CP2105 quando disponÃ­vel. A conexÃ£o Ã© aberta quando vocÃª clica em **Connect**.
-- **IdentificaÃ§Ã£o do rÃ¡dio:** lÃª o ID do rÃ¡dio e a versÃ£o do firmware MAIN apÃ³s a conexÃ£o.
-- **Sintonia MAIN:** exibe a frequÃªncia atual e acompanha periodicamente alteraÃ§Ãµes feitas pelo dial fÃ­sico do rÃ¡dio.
-- **Entrada direta de frequÃªncia:** aceita nÃºmeros abreviados e aplica separadores automaticamente; por exemplo, `1448` se torna `144.800.000 Hz` e `27555` se torna `27.555.000 Hz`.
-- **Dial na interface:** altera a frequÃªncia com o scroll do mouse.
-- **SeleÃ§Ã£o de banda:** botÃµes solicitam a seleÃ§Ã£o de banda via CAT e usam o Band Stack interno do rÃ¡dio, sem enviar uma frequÃªncia fixa.
-- **SeleÃ§Ã£o de modo:** botÃµes selecionam os modos MAIN disponÃ­veis.
+## 🚀 Funcionalidades
+
+- **Conexão CAT:** detecta e seleciona automaticamente a porta `Enhanced COM Port` do adaptador Silicon Labs CP2105 quando disponível. A conexão é aberta quando você clica em **Connect**.
+- **Identificação do rádio:** lê o ID do rádio e a versão do firmware MAIN após a conexão.
+- **Sintonia MAIN:** exibe a frequência atual e acompanha periodicamente alterações feitas pelo dial físico do rádio.
+- **Entrada direta de frequência:** aceita números abreviados e aplica separadores automaticamente; por exemplo, `1448` se torna `144.800.000 Hz` e `27555` se torna `27.555.000 Hz`.
+- **Dial na interface:** altera a frequência com o scroll do mouse.
+- **Seleção de banda:** botões solicitam a seleção de banda via CAT e usam o Band Stack interno do rádio, sem enviar uma frequência fixa.
+- **Seleção de modo:** botões selecionam os modos MAIN disponíveis.
 - **CH-STEP:** slider vertical que se adapta ao modo atual e aceita arraste, clique na escala e ajuste pelo scroll do mouse.
-- **Controles rÃ¡pidos:** sliders ajustam RF POWER, D-LEVEL, D-PEAK, NB e DNR e enviam as alteraÃ§Ãµes durante o ajuste.
-- **ParÃ¢metros FUNC:** permite escolher localmente um parÃ¢metro para ajustar sem alterar a funÃ§Ã£o atribuÃ­da ao botÃ£o fÃ­sico FUNC do rÃ¡dio.
-- **Menu CAT:** pesquisa e lÃª itens do menu; os itens compatÃ­veis podem ser gravados individualmente ou em lote.
-- **Backup e restauraÃ§Ã£o:** salva configuraÃ§Ãµes lidas em JSON e compara um backup com o estado atual antes de restaurar valores compatÃ­veis.
-- **Registro de comunicaÃ§Ã£o:** informa o andamento das operaÃ§Ãµes e pode exibir os comandos CAT enviados e recebidos.
+- **Controles rápidos:** sliders ajustam RF POWER, D-LEVEL, D-PEAK, NB e DNR e enviam as alterações durante o ajuste.
+- **Parâmetros FUNC:** permite escolher localmente um parâmetro para ajustar sem alterar a função atribuída ao botão físico FUNC do rádio.
+- **Menu CAT:** pesquisa e lê itens do menu; os itens compatíveis podem ser gravados individualmente ou em lote.
+- **Backup e restauração:** salva configurações lidas em JSON e compara um backup com o estado atual antes de restaurar valores compatíveis.
+- **Registro de comunicação:** informa o andamento das operações e pode exibir os comandos CAT enviados e recebidos.
 
-## ðŸ› ï¸ Tecnologias e recursos
+## 🛠️ Tecnologias e recursos
 
 ### Linguagem
 
@@ -183,23 +183,23 @@ Developed by **Everton Machado â€” PR2EM**, with assistance from **OpenAI C
 
 ### Bibliotecas e frameworks
 
-- **Tkinter / ttk:** interface grÃ¡fica.
-- **pyserial 3.5:** descoberta de portas seriais e comunicaÃ§Ã£o CAT.
-- **Biblioteca padrÃ£o do Python:** incluindo `threading`, `queue`, `json`, `pathlib` e `tkinter`.
+- **Tkinter / ttk:** interface gráfica.
+- **pyserial 3.5:** descoberta de portas seriais e comunicação CAT.
+- **Biblioteca padrão do Python:** incluindo `threading`, `queue`, `json`, `pathlib` e `tkinter`.
 
 ### Ferramentas de IA no desenvolvimento
 
-- **OpenAI Codex:** utilizado como assistente de desenvolvimento e manutenÃ§Ã£o. O aplicativo nÃ£o chama APIs de IA durante a execuÃ§Ã£o e nÃ£o exige chave de API.
+- **OpenAI Codex:** utilizado como assistente de desenvolvimento e manutenção. O aplicativo não chama APIs de IA durante a execução e não exige chave de API.
 
-## ðŸ“¦ PrÃ©-requisitos e instalaÃ§Ã£o
+## 📦 Pré-requisitos e instalação
 
-### PrÃ©-requisitos
+### Pré-requisitos
 
-- Windows 10/11 (as instruÃ§Ãµes abaixo sÃ£o para Windows).
+- Windows 10/11 (as instruções abaixo são para Windows).
 - Python 3.8+ instalado com Tcl/Tk.
 - Git.
 - Yaesu FTX-1 conectado ao computador por USB usando a **Enhanced COM Port (CAT-1)**.
-- A taxa CAT-1 do rÃ¡dio deve corresponder Ã  selecionada no programa; o padrÃ£o de fÃ¡brica Ã© 38400 bps.
+- A taxa CAT-1 do rádio deve corresponder à selecionada no programa; o padrão de fábrica é 38400 bps.
 
 ### Clonar e instalar
 
@@ -211,7 +211,7 @@ cd pr2em_ham
 py -m venv .venv
 ```
 
-Instale a dependÃªncia dentro do ambiente virtual:
+Instale a dependência dentro do ambiente virtual:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
@@ -223,79 +223,79 @@ Inicie o aplicativo:
 .\.venv\Scripts\python.exe ftx1_cat_menu.py
 ```
 
-Esses comandos nÃ£o exigem ativar o ambiente virtual com `Activate.ps1`, evitando problemas com a polÃ­tica de execuÃ§Ã£o de scripts do PowerShell.
+Esses comandos não exigem ativar o ambiente virtual com `Activate.ps1`, evitando problemas com a política de execução de scripts do PowerShell.
 
-### ConfiguraÃ§Ã£o de `.env`
+### Configuração de `.env`
 
-NÃ£o Ã© necessÃ¡rio criar um arquivo `.env` nem configurar variÃ¡veis de ambiente. O aplicativo nÃ£o usa credenciais, tokens ou serviÃ§os externos. Ele configura os caminhos do Tcl/Tk automaticamente quando disponÃ­veis na instalaÃ§Ã£o do Python.
+Não é necessário criar um arquivo `.env` nem configurar variáveis de ambiente. O aplicativo não usa credenciais, tokens ou serviços externos. Ele configura os caminhos do Tcl/Tk automaticamente quando disponíveis na instalação do Python.
 
-## ðŸ’» Como usar
+## 💻 Como usar
 
-1. Conecte o FTX-1 ao computador e ligue o rÃ¡dio.
-2. Inicie o aplicativo. Se detectada, a porta CP2105 Enhanced COM Port serÃ¡ selecionada automaticamente.
-3. Confira a taxa CAT-1 e clique em **Connect**. Aguarde a identificaÃ§Ã£o do rÃ¡dio e a leitura inicial dos controles.
-4. Na aba **Quick Controls**, use o dial na tela ou clique no display de frequÃªncia MAIN para digitar uma frequÃªncia. O display tambÃ©m acompanha alteraÃ§Ãµes feitas pelo dial fÃ­sico do rÃ¡dio.
-5. Clique em um botÃ£o de banda para solicitÃ¡-la ao rÃ¡dio. Com **BAND STACK** habilitado no FTX-1, o rÃ¡dio recupera a frequÃªncia e o modo armazenados no Band Stack.
-6. Ajuste os sliders para enviar alteraÃ§Ãµes de RF POWER, D-LEVEL, D-PEAK, NB, DNR ou CH-STEP.
-7. Para ler ou alterar outros ajustes, abra **CAT Menu**, escolha um grupo e use **Read**, **Write** ou os comandos de leitura/gravaÃ§Ã£o em lote.
-8. Use **Save Backupâ€¦** antes de alteraÃ§Ãµes maiores. A restauraÃ§Ã£o compara os valores primeiro e pede confirmaÃ§Ã£o antes de gravar.
+1. Conecte o FTX-1 ao computador e ligue o rádio.
+2. Inicie o aplicativo. Se detectada, a porta CP2105 Enhanced COM Port será selecionada automaticamente.
+3. Confira a taxa CAT-1 e clique em **Connect**. Aguarde a identificação do rádio e a leitura inicial dos controles.
+4. Na aba **Quick Controls**, use o dial na tela ou clique no display de frequência MAIN para digitar uma frequência. O display também acompanha alterações feitas pelo dial físico do rádio.
+5. Clique em um botão de banda para solicitá-la ao rádio. Com **BAND STACK** habilitado no FTX-1, o rádio recupera a frequência e o modo armazenados no Band Stack.
+6. Ajuste os sliders para enviar alterações de RF POWER, D-LEVEL, D-PEAK, NB, DNR ou CH-STEP.
+7. Para ler ou alterar outros ajustes, abra **CAT Menu**, escolha um grupo e use **Read**, **Write** ou os comandos de leitura/gravação em lote.
+8. Use **Save Backup…** antes de alterações maiores. A restauração compara os valores primeiro e pede confirmação antes de gravar.
 
-### Exemplos de entrada de frequÃªncia
+### Exemplos de entrada de frequência
 
-Digite os nÃºmeros sem separadores; a pontuaÃ§Ã£o Ã© aplicada automaticamente.
+Digite os números sem separadores; a pontuação é aplicada automaticamente.
 
-| Entrada | FrequÃªncia enviada |
+| Entrada | Frequência enviada |
 | --- | --- |
 | `1448` | `144.800.000 Hz` |
 | `27555` | `27.555.000 Hz` |
 
-### DiagnÃ³stico rÃ¡pido
+### Diagnóstico rápido
 
-- Se a porta nÃ£o aparecer, confira a conexÃ£o USB e atualize a lista de portas.
-- O aplicativo procura `CP2105` e `Enhanced` na descriÃ§Ã£o da porta. Se o driver mostrar outro nome, selecione manualmente a porta CAT-1.
-- Se o rÃ¡dio nÃ£o responder, confirme a **Enhanced COM Port (CAT-1)**, a taxa correspondente a `CAT-1 RATE` e que nenhum outro aplicativo estÃ¡ usando a porta.
-- Se o Tkinter nÃ£o iniciar, instale ou repare o Python incluindo Tcl/Tk.
-- A seleÃ§Ã£o de banda depende de **BAND STACK** estar habilitado no rÃ¡dio.
+- Se a porta não aparecer, confira a conexão USB e atualize a lista de portas.
+- O aplicativo procura `CP2105` e `Enhanced` na descrição da porta. Se o driver mostrar outro nome, selecione manualmente a porta CAT-1.
+- Se o rádio não responder, confirme a **Enhanced COM Port (CAT-1)**, a taxa correspondente a `CAT-1 RATE` e que nenhum outro aplicativo está usando a porta.
+- Se o Tkinter não iniciar, instale ou repare o Python incluindo Tcl/Tk.
+- A seleção de banda depende de **BAND STACK** estar habilitado no rádio.
 
-## ðŸ§­ Fluxo simplificado
+## 🧭 Fluxo simplificado
 
 ```text
 Iniciar aplicativo
-  â†’ localizar a porta CAT-1
-  â†’ abrir a conexÃ£o serial e identificar o rÃ¡dio
-  â†’ ler frequÃªncia, modo e controles rÃ¡pidos
-  â†’ enviar comandos CAT durante os ajustes
-  â†’ consultar novamente o rÃ¡dio e atualizar a interface
+  → localizar a porta CAT-1
+  → abrir a conexão serial e identificar o rádio
+  → ler frequência, modo e controles rápidos
+  → enviar comandos CAT durante os ajustes
+  → consultar novamente o rádio e atualizar a interface
 ```
 
-As leituras e gravaÃ§Ãµes seriais sÃ£o executadas em segundo plano para manter a interface responsiva.
+As leituras e gravações seriais são executadas em segundo plano para manter a interface responsiva.
 
-## ðŸ—‚ï¸ Estrutura do projeto
+## 🗂️ Estrutura do projeto
 
 ```text
 pr2em_ham/
-â”œâ”€â”€ ftx1_cat_menu.py   # Interface Tkinter e operaÃ§Ãµes CAT
-â”œâ”€â”€ ftx1_menu.py       # Tabela de itens do menu EX e comunicaÃ§Ã£o serial CAT
-â”œâ”€â”€ requirements.txt   # DependÃªncias Python
-â”œâ”€â”€ LICENSE            # PolyForm Noncommercial License 1.0.0
-â””â”€â”€ README.md          # Esta documentaÃ§Ã£o
+├── ftx1_cat_menu.py   # Interface Tkinter e operações CAT
+├── ftx1_menu.py       # Tabela de itens do menu EX e comunicação serial CAT
+├── requirements.txt   # Dependências Python
+├── LICENSE            # PolyForm Noncommercial License 1.0.0
+└── README.md          # Esta documentação
 ```
 
-## ðŸ¤ Como contribuir
+## 🤝 Como contribuir
 
-1. FaÃ§a um fork do repositÃ³rio.
-2. Crie uma branch para sua alteraÃ§Ã£o: `git switch -c feature/minha-melhoria`.
-3. Mantenha as alteraÃ§Ãµes objetivas. Para novos comandos CAT, inclua a referÃªncia correspondente ao manual do FTX-1.
-4. Antes de abrir um pull request, confira a sintaxe Python e, quando possÃ­vel, teste com um rÃ¡dio ou uma interface serial simulada.
-5. Inclua um resumo do comportamento, passos para reproduzir e capturas de tela para alteraÃ§Ãµes na interface.
+1. Faça um fork do repositório.
+2. Crie uma branch para sua alteração: `git switch -c feature/minha-melhoria`.
+3. Mantenha as alterações objetivas. Para novos comandos CAT, inclua a referência correspondente ao manual do FTX-1.
+4. Antes de abrir um pull request, confira a sintaxe Python e, quando possível, teste com um rádio ou uma interface serial simulada.
+5. Inclua um resumo do comportamento, passos para reproduzir e capturas de tela para alterações na interface.
 
-NÃ£o inclua backups pessoais, arquivos de configuraÃ§Ã£o do rÃ¡dio, ambientes virtuais ou documentos que nÃ£o possam ser redistribuÃ­dos. As contribuiÃ§Ãµes seguem a licenÃ§a nÃ£o comercial do projeto, salvo autorizaÃ§Ã£o diferente por escrito do titular dos direitos autorais.
+Não inclua backups pessoais, arquivos de configuração do rádio, ambientes virtuais ou documentos que não possam ser redistribuídos. As contribuições seguem a licença não comercial do projeto, salvo autorização diferente por escrito do titular dos direitos autorais.
 
-## ðŸ“„ LicenÃ§a
+## 📄 Licença
 
-Este software estÃ¡ licenciado sob a **PolyForm Noncommercial License 1.0.0**. Ela permite uso, modificaÃ§Ã£o e redistribuiÃ§Ã£o para fins nÃ£o comerciais. O uso comercial exige autorizaÃ§Ã£o separada do titular dos direitos autorais. Consulte o arquivo [LICENSE](LICENSE) e o [texto oficial da licenÃ§a](https://polyformproject.org/licenses/noncommercial/1.0.0/). Esta Ã© uma licenÃ§a de cÃ³digo-fonte disponÃ­vel, mas nÃ£o aprovada pela OSI como licenÃ§a open source.
+Este software está licenciado sob a **PolyForm Noncommercial License 1.0.0**. Ela permite uso, modificação e redistribuição para fins não comerciais. O uso comercial exige autorização separada do titular dos direitos autorais. Consulte o arquivo [LICENSE](LICENSE) e o [texto oficial da licença](https://polyformproject.org/licenses/noncommercial/1.0.0/). Esta é uma licença de código-fonte disponível, mas não aprovada pela OSI como licença open source.
 
-## ðŸ‘¤ CrÃ©ditos
+## 👤 Créditos
 
-Desenvolvido por **Everton Machado â€” PR2EM**, com assistÃªncia do **OpenAI Codex**.
+Desenvolvido por **Everton Machado — PR2EM**, com assistência do **OpenAI Codex**.
 

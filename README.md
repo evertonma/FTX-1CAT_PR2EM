@@ -14,7 +14,17 @@
 
 ## 📷 Screenshot
 
-![Yaesu FTX-1 CAT Menu showing the Quick Controls tab](docs/screenshot.jpg)
+**Quick Controls**
+
+![Yaesu FTX-1 CAT Menu showing the Quick Controls tab](docs/v0.3_1.jpg)
+
+**Memories**
+
+![Yaesu FTX-1 CAT Menu showing the Memories tab](<docs/v0.3_2 memories tab.jpg>)
+
+**CAT Menu**
+
+![Yaesu FTX-1 CAT Menu showing the CAT Menu tab](<docs/v0.3_3 CAT menu tab.jpg>)
 
 ## 🚀 Features
 
@@ -211,7 +221,17 @@ Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex*
 
 ## 📷 Captura de tela
 
-![Yaesu FTX-1 CAT Menu na aba Controles Rápidos](docs/screenshot.jpg)
+**Controles Rápidos**
+
+![Yaesu FTX-1 CAT Menu na aba Controles Rápidos](docs/v0.3_1.jpg)
+
+**Memórias**
+
+![Yaesu FTX-1 CAT Menu na aba Memórias](<docs/v0.3_2 memories tab.jpg>)
+
+**Menu CAT**
+
+![Yaesu FTX-1 CAT Menu na aba Menu CAT](<docs/v0.3_3 CAT menu tab.jpg>)
 
 ## 🚀 Funcionalidades
 

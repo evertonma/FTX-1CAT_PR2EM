@@ -61,6 +61,12 @@ class SliderCard(ttk.LabelFrame):
     def set_status(self, text, color=GRAY):
         self.status.config(text=text, foreground=color)
 
+    def set_range(self, lo: float, hi: float):
+        self.scale.configure(from_=lo, to=hi)
+
+    def set_title(self, text: str):
+        self.configure(text=text)
+
 
 # --------------------------------------------------------------------------
 # Página
@@ -82,6 +88,9 @@ class QuickControlsPage(ttk.Frame):
         self.cards: Dict[str, SliderCard] = {}
         self.func_active: Optional[C.Control] = None
         self.func_from_radio = False
+        self.pc_head = "2"                 # '1' field head (5-10 W) ou '2' SPA-1 (5-100 W)
+        self.step_khz: Optional[float] = None
+        self.memory_channel: Optional[str] = None
         self._build()
 
     # ======================================================================
@@ -234,21 +243,74 @@ class QuickControlsPage(ttk.Frame):
         self.func_status.config(text="", foreground=GRAY)
 
     def on_frequency_polled(self, hz: int):
-        """Chamado pela leitura periódica: só atualiza se mudou (dial físico)."""
+        """Quadro FA (AI) ou leitura periódica: só atualiza se mudou (dial físico)."""
         if hz != self.frequency_hz:
             self.frequency_hz = hz
             self.freq_lbl.config(text=f"{C.format_frequency(hz)} Hz")
+
+    def on_info(self, info: C.Info):
+        """Quadro IF (AI ou leitura periódica): frequência, modo e VFO/memória."""
+        self.on_frequency_polled(info.frequency)
+        self.memory_channel = info.channel if info.vfo_mem == "1" else None
+        if info.mode != self.mode:
+            self.on_mode(info.mode)
+        else:
+            self._update_hint()
+
+    def on_mode(self, code: str):
+        """Modo mudou no rádio: atualiza os botões e relê o CH STEP do novo modo."""
+        self.mode = code
+        self.mode_var.set(code)
+        self._update_hint()
+        if not self.app.radio:
+            return
+
+        def job(radio):
+            item = C.ch_step_item_for_mode(code)
+            raw = radio.read_menu(item)
+            return item, raw
+
+        def then(result):
+            item, raw = result
+            self._show_ch_step(item, raw)
+            self.step_khz = C.ch_step_khz(item, raw)
+            self._update_hint()
+
+        self.app.run(job, "Reading CH STEP", then, key="ch-step-read", quiet=True)
+
+    def on_rf_power(self, head: str, watts: int):
+        """Resposta PC: ajusta a faixa do slider ao hardware (field head ou SPA-1)."""
+        card = self.cards["RF POWER"]
+        if head != self.pc_head or card.scale.cget("to") != C.PC_HEAD_RANGE.get(head, (5, 100))[1]:
+            self.pc_head = head
+            lo, hi = C.PC_HEAD_RANGE.get(head, (5, 100))
+            card.set_range(lo, hi)
+            card.set_title(f"RF POWER — {C.PC_HEAD_NAME.get(head, 'unknown head')} ({lo}-{hi} W)")
+        card.show_radio_value(watts, keep_slider=self.app.worker.pending("set:RF POWER"))
+
+    def _update_hint(self):
+        parts = [C.mode_name(self.mode)]
+        if self.step_khz is not None:
+            parts.append(f"Step: {self.step_khz:g} kHz")
+        if self.memory_channel:
+            ch = self.memory_channel
+            parts.append(f"MEM {int(ch) if ch.isdigit() else ch}")
+        self.freq_hint.config(text="  •  ".join(parts))
 
     # ======================================================================
     # Sintonia
     # ======================================================================
     def _apply_tuning(self, result):
-        frequency, mode, item, step_raw, step_khz = result
+        frequency, mode, item, step_raw, step_khz = result[:5]
+        if len(result) > 5:
+            info = result[5]
+            self.memory_channel = info.channel if info.vfo_mem == "1" else None
         self.frequency_hz = int(frequency)
         self.mode = mode
+        self.step_khz = step_khz
         self.freq_lbl.config(text=f"{C.format_frequency(frequency)} Hz")
         self.mode_var.set(mode)
-        self.freq_hint.config(text=f"{C.mode_name(mode)}  •  Step: {step_khz:g} kHz")
+        self._update_hint()
         self._show_ch_step(item, step_raw)
 
     def _run_tuning(self, title, prepare, key=None):
@@ -392,6 +454,13 @@ class QuickControlsPage(ttk.Frame):
             return
         value = card.value()
         key = f"set:{card.ctl.key}"
+        if card.ctl is C.RF_POWER:
+            head = self.pc_head
+            card.set_status("Sending…", AMBER)
+            self.app.run(lambda r: r.set_rf_power(head, int(value)), "Setting RF POWER",
+                         lambda res: self.on_rf_power(*res), key=key, quiet=True,
+                         on_error=lambda e: card.set_status(f"Error: {e}", RED))
+            return
 
         def then(actual):
             card.show_radio_value(actual, keep_slider=self.app.worker.pending(key))
@@ -410,7 +479,10 @@ class QuickControlsPage(ttk.Frame):
             values, errors = {}, {}
             for name, card in self.cards.items():
                 try:
-                    values[name] = radio.read_control(card.ctl)
+                    if card.ctl is C.RF_POWER:
+                        values[name] = radio.read_rf_power()      # (head, watts)
+                    else:
+                        values[name] = radio.read_control(card.ctl)
                 except Exception as exc:      # noqa: BLE001 - segue lendo os demais
                     errors[name] = str(exc)
             tuning = radio.read_tuning()
@@ -419,7 +491,10 @@ class QuickControlsPage(ttk.Frame):
         def then(result):
             values, errors, tuning = result
             for name, value in values.items():
-                self.cards[name].show_radio_value(value)
+                if name == "RF POWER":
+                    self.on_rf_power(*value)
+                else:
+                    self.cards[name].show_radio_value(value)
             for name, error in errors.items():
                 self.cards[name].set_status("No response", RED)
                 self.app.log(f"Could not read {name}: {error}")
@@ -460,7 +535,9 @@ class QuickControlsPage(ttk.Frame):
     def _show_func(self, ctl: C.Control, value, keep_slider=False):
         self.func_active = ctl
         self.func_title.config(text=ctl.title)
-        self.func_slider.configure(from_=ctl.lo, to=ctl.hi, resolution=ctl.step, state="normal")
+        lo, hi = (C.PC_HEAD_RANGE.get(self.pc_head, (ctl.lo, ctl.hi)) if ctl.key == "D"
+                  else (ctl.lo, ctl.hi))
+        self.func_slider.configure(from_=lo, to=hi, resolution=ctl.step, state="normal")
         if not keep_slider:
             self.func_from_radio = True
             self.func_slider_var.set(value)
@@ -483,7 +560,18 @@ class QuickControlsPage(ttk.Frame):
             if self.func_active is ctl:
                 self._show_func(ctl, actual, keep_slider=self.app.worker.pending("func:set"))
 
+        if ctl.key == "D":                    # RF POWER: respeita o hardware (PC1/PC2)
+            head = self.pc_head
+
+            def set_power(r):
+                head_back, watts = r.set_rf_power(head, int(value))
+                self.app.ui(lambda: self.on_rf_power(head_back, watts))
+                return watts
+        else:
+            def set_power(r):
+                return r.set_control(ctl, value)
+
         self.func_status.config(text="Sending to radio...", foreground=AMBER)
-        self.app.run(lambda r: r.set_control(ctl, value), f"Setting {ctl.title}", then,
+        self.app.run(set_power, f"Setting {ctl.title}", then,
                      key="func:set", quiet=True,
                      on_error=lambda e: self.func_status.config(text=f"Error: {e}", foreground=RED))

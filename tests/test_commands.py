@@ -100,3 +100,52 @@ def test_func_parameter_encoding():
     assert C.da_set_cmd("DA001010;", 2, 7) == "DA000710;"
     assert C.da_set_cmd("DA001010;", 4, 3) == "DA001003;"
     assert {code for code, _ in C.FUNC_BUTTONS} == set(f)
+
+
+def test_parse_info_roundtrip():
+    frame = "IF00000014250000+000000200000;"
+    info = C.parse_info(frame)
+    assert (info.frequency, info.mode, info.vfo_mem, info.channel) == (14_250_000, "2", "0", "00000")
+    assert info.encode("IF") == frame
+    mem = C.Info("00123", 146_610_000, -150, True, False, "4", "1", "1", "2")
+    back = C.parse_info(mem.encode("MR"))
+    assert back == mem
+    assert len(mem.encode("MW")) == C.INFO_LEN
+    with pytest.raises(ValueError):
+        C.parse_info("IF123;")
+
+
+def test_parse_status_and_meters():
+    st = C.parse_status("RI01010011;")
+    assert st.hi_swr and st.tx == "1" and st.transmitting and st.scan == "1" and st.busy
+    assert not st.tuning and st.recording == "0"
+    with pytest.raises(ValueError):
+        C.parse_status("RI0;")
+    assert C.parse_smeter("SM0120;") == 120
+    assert C.parse_meter("RM6030000;") == ("6", 30)
+    assert C.read_meter_cmd("5") == "RM5;"
+    with pytest.raises(ValueError):
+        C.read_meter_cmd("9")
+
+
+def test_rf_power_head():
+    assert C.parse_pc("PC1008;") == ("1", 8)
+    assert C.set_rf_power_cmd("1", 10) == "PC1010;"
+    assert C.set_rf_power_cmd("2", 100) == "PC2100;"
+    with pytest.raises(ValueError):
+        C.set_rf_power_cmd("1", 50)
+    assert C.auto_information_cmd(True) == "AI1;" and C.auto_information_cmd(False) == "AI0;"
+
+
+def test_memory_commands():
+    assert C.read_memory_cmd(7) == "MR00007;"
+    assert C.read_tag_cmd(999) == "MT00999;"
+    assert C.write_tag_cmd(1, "FT8 20m") == "MT00001FT8 20m     ;"
+    assert C.write_tag_cmd(1, "x" * 20) == "MT00001" + "x" * 12 + ";"
+    assert C.parse_tag("MT00001FT8 20m     ;") == (1, "FT8 20m")
+    assert C.select_channel_cmd(12) == "MC000012;"
+    assert C.vfo_memory_cmd(True) == "VM011;" and C.vfo_memory_cmd(False) == "VM000;"
+    with pytest.raises(ValueError):
+        C.channel_code(0)
+    with pytest.raises(ValueError):
+        C.write_tag_cmd(1, "ação")

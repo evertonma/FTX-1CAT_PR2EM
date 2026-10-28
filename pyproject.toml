@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ftx1cat"
-version = "0.2.0"
+version = "0.3.0"
 description = "Yaesu FTX-1 CAT Menu — desktop app to read and control the FTX-1 over its serial CAT interface"
 readme = "README.md"
 requires-python = ">=3.8"

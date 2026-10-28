@@ -1,6 +1,6 @@
 # Yaesu FTX-1 CAT Menu — by PR2EM
 
-![Status: v0.2 Beta](https://img.shields.io/badge/status-v0.2--beta-orange)
+![Status: v0.3 Beta](https://img.shields.io/badge/status-v0.3--beta-orange)
 ![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue)
 ![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blueviolet)
 ![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey)
@@ -8,7 +8,7 @@
 
 > A Python desktop application for reading and controlling the Yaesu FTX-1 transceiver through its serial CAT interface. It brings together quick operating controls, band selection, and CAT menu parameter management.
 
-> **Version:** 0.2 Beta. This project is under development. Use care when writing settings to your radio.
+> **Version:** 0.3 Beta. This project is under development. Use care when writing settings to your radio.
 
 [Versão em Português](#versão-em-português)
 
@@ -19,17 +19,20 @@
 ## 🚀 Features
 
 - **CAT connection:** automatically detects and selects the Silicon Labs CP2105 `Enhanced COM Port` when available, and remembers the last port and baud rate you used.
-- **Radio identification:** reads the radio ID and MAIN firmware version after connecting.
-- **MAIN tuning:** displays the current frequency and periodically tracks changes made with the radio's physical dial.
+- **Radio identification:** reads the radio ID and the firmware version of every CPU (MAIN, DISPLAY, SDR, DSP, SPA-1, FC-80) after connecting.
+- **Live display (Auto Information):** the radio reports frequency, mode and status changes by itself (`AI1;`), so the display follows the physical dial instantly. Falls back to periodic reads if the radio does not accept it (LIVE/POLL indicator).
+- **Status bar and meters:** RX/TX, HI-SWR, BUSY, TUNE and SCAN indicators, S-meter while receiving and PO/SWR/ALC while transmitting (raw 0-255 scale; calibration to S-units and watts is planned).
+- **MAIN tuning:** displays the current frequency and mode, and the memory channel when the radio is in memory mode.
 - **Direct frequency entry:** accepts abbreviated numeric input and applies separators automatically; for example, `1448` becomes `144.800.000 Hz` and `27555` becomes `27.555.000 Hz`.
 - **On-screen dial:** changes frequency with the mouse wheel.
 - **Band selection:** buttons request the FTX-1 CAT band selection and use the radio's internal Band Stack rather than sending a fixed frequency. Since the CAT Band Select list has no 11 m entry, the **11m** button directly tunes to 27.555 MHz (DX calling frequency) while keeping the current mode.
 - **Mode selection:** buttons select available MAIN operating modes.
 - **CH-STEP:** a vertical slider adapts to the current mode and supports dragging, clicking the scale, and mouse wheel adjustment.
-- **Quick controls:** sliders adjust RF POWER, D-LEVEL, D-PEAK, NB, and DNR and send changes while you adjust them.
+- **Quick controls:** sliders adjust RF POWER, D-LEVEL, D-PEAK, NB, and DNR and send changes while you adjust them. RF POWER follows the hardware reported by the radio: 5-10 W on the FTX-1 field head, 5-100 W with the SPA-1.
 - **FUNC parameters:** select a parameter to adjust locally without changing the assignment of the radio's physical FUNC button.
 - **CAT menu:** search and read menu items; supported items can be written individually or in batches. Edited values are highlighted until they are written.
 - **Backup and restore:** saves read settings to JSON and compares a backup with the current state before restoring compatible values.
+- **Memories:** reads a range of memory channels with their tags, lets you edit frequency, mode, tag, shift and squelch type, writes changes back after showing a diff, recalls a channel, stores the current VFO into a channel, and exports/imports CSV.
 - **Communication log:** reports operation progress, can show CAT commands sent and received, and can be copied to the clipboard. A log file is also kept on disk.
 - **Simulator mode:** `--simulate` runs the whole application against a built-in fake radio — no FTX-1 or serial port needed. Useful for trying the app and for development.
 - **Rejected commands are reported:** when the radio answers `?;` the app says so immediately instead of waiting for a timeout.
@@ -150,11 +153,13 @@ FTX-1CAT_PR2EM/
 │       ├── app.py           #   main window, connection, log, job runner
 │       ├── quick_controls.py#   Quick Controls tab
 │       ├── menu_page.py     #   CAT Menu tab, backup/restore
+│       ├── memory_page.py   #   Memories tab, CSV import/export
+│       ├── status_bar.py    #   RX/TX indicators and meters
 │       ├── worker.py        #   background serial job queue
 │       ├── settings.py      #   persistent settings
 │       └── widgets.py       #   scroll frame, dial, slider helpers
 ├── tests/                   # pytest suite (runs without a radio)
-├── docs/                    # screenshot and project evaluation
+├── docs/                    # screenshot, evaluation, CAT roadmap and the manuals as Markdown
 ├── ftx1_cat_menu.py         # Compatibility launcher (v0.1 entry point)
 ├── AGENTS.md                # Rules for AI coding assistants and contributors
 ├── pyproject.toml           # Package metadata, pytest and ruff configuration
@@ -202,7 +207,7 @@ Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex*
 
 > Aplicativo desktop em Python para consultar e controlar o transceptor Yaesu FTX-1 pela interface serial CAT. Reúne controles rápidos de operação, seleção de banda e gerenciamento dos parâmetros do menu CAT.
 
-> **Versão:** 0.2 Beta. O projeto está em desenvolvimento. Tenha cuidado ao gravar configurações no rádio.
+> **Versão:** 0.3 Beta. O projeto está em desenvolvimento. Tenha cuidado ao gravar configurações no rádio.
 
 ## 📷 Captura de tela
 
@@ -211,17 +216,20 @@ Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex*
 ## 🚀 Funcionalidades
 
 - **Conexão CAT:** detecta e seleciona automaticamente a porta `Enhanced COM Port` do adaptador Silicon Labs CP2105 quando disponível, e lembra a última porta e taxa usadas.
-- **Identificação do rádio:** lê o ID do rádio e a versão do firmware MAIN após a conexão.
-- **Sintonia MAIN:** exibe a frequência atual e acompanha periodicamente alterações feitas pelo dial físico do rádio.
+- **Identificação do rádio:** lê o ID do rádio e a versão de firmware de cada CPU (MAIN, DISPLAY, SDR, DSP, SPA-1, FC-80) após a conexão.
+- **Display ao vivo (Auto Information):** o rádio informa sozinho mudanças de frequência, modo e estado (`AI1;`), e o display acompanha o dial físico na hora. Se o rádio não aceitar, volta à leitura periódica (indicador LIVE/POLL).
+- **Faixa de status e medidores:** indicadores RX/TX, HI-SWR, BUSY, TUNE e SCAN, S-meter em recepção e PO/SWR/ALC em transmissão (escala bruta 0-255; calibração para S-units e watts está planejada).
+- **Sintonia MAIN:** exibe a frequência e o modo atuais, e o canal de memória quando o rádio está em modo memória.
 - **Entrada direta de frequência:** aceita números abreviados e aplica separadores automaticamente; por exemplo, `1448` se torna `144.800.000 Hz` e `27555` se torna `27.555.000 Hz`.
 - **Dial na interface:** altera a frequência com o scroll do mouse.
 - **Seleção de banda:** botões solicitam a seleção de banda via CAT e usam o Band Stack interno do rádio, sem enviar uma frequência fixa. Como a lista CAT Band Select não tem uma entrada para 11 m, o botão **11m** sintoniza diretamente em 27,555 MHz (frequência de chamada DX), mantendo o modo atual.
 - **Seleção de modo:** botões selecionam os modos MAIN disponíveis.
 - **CH-STEP:** slider vertical que se adapta ao modo atual e aceita arraste, clique na escala e ajuste pelo scroll do mouse.
-- **Controles rápidos:** sliders ajustam RF POWER, D-LEVEL, D-PEAK, NB e DNR e enviam as alterações durante o ajuste.
+- **Controles rápidos:** sliders ajustam RF POWER, D-LEVEL, D-PEAK, NB e DNR e enviam as alterações durante o ajuste. RF POWER segue o hardware informado pelo rádio: 5-10 W no FTX-1 field head, 5-100 W com o SPA-1.
 - **Parâmetros FUNC:** permite escolher localmente um parâmetro para ajustar sem alterar a função atribuída ao botão físico FUNC do rádio.
 - **Menu CAT:** pesquisa e lê itens do menu; os itens compatíveis podem ser gravados individualmente ou em lote. Valores editados ficam destacados até serem gravados.
 - **Backup e restauração:** salva configurações lidas em JSON e compara um backup com o estado atual antes de restaurar valores compatíveis.
+- **Memórias:** lê uma faixa de canais com as etiquetas, permite editar frequência, modo, etiqueta, shift e tipo de squelch, grava as alterações após mostrar o diff, chama um canal, guarda o VFO atual em um canal e exporta/importa CSV.
 - **Registro de comunicação:** informa o andamento das operações, pode exibir os comandos CAT enviados e recebidos e pode ser copiado. Um arquivo de log também é mantido em disco.
 - **Modo simulador:** `--simulate` executa o aplicativo inteiro contra um rádio falso embutido — sem FTX-1 nem porta serial. Útil para conhecer o app e para desenvolvimento.
 - **Comandos recusados são informados:** quando o rádio responde `?;`, o app avisa na hora em vez de esperar o timeout.
@@ -342,11 +350,13 @@ FTX-1CAT_PR2EM/
 │       ├── app.py           #   janela principal, conexão, log, execução de jobs
 │       ├── quick_controls.py#   aba Quick Controls
 │       ├── menu_page.py     #   aba CAT Menu, backup/restore
+│       ├── memory_page.py   #   aba Memories, importar/exportar CSV
+│       ├── status_bar.py    #   indicadores RX/TX e medidores
 │       ├── worker.py        #   fila de trabalhos seriais em segundo plano
 │       ├── settings.py      #   configurações persistentes
 │       └── widgets.py       #   painel rolável, dial, helpers de slider
 ├── tests/                   # Testes pytest (rodam sem rádio)
-├── docs/                    # Captura de tela e avaliação do projeto
+├── docs/                    # Captura de tela, avaliação, roteiro CAT e manuais em Markdown
 ├── ftx1_cat_menu.py         # Atalho de compatibilidade (entrada da v0.1)
 ├── AGENTS.md                # Regras para assistentes de IA e contribuidores
 ├── pyproject.toml           # Metadados do pacote, configuração de pytest e ruff

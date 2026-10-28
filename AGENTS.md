@@ -21,6 +21,8 @@ ftx1cat/
     app.py            janela principal, conexão, log, fila de jobs
     quick_controls.py aba Quick Controls
     menu_page.py      aba CAT Menu + backup/restore
+    memory_page.py    aba Memories (MR/MW/MT, CSV)
+    status_bar.py     indicadores RI e medidores SM/RM
     worker.py         thread única que executa os jobs seriais
     settings.py       configurações persistentes (JSON)
     widgets.py        ScrollFrame, dial, helpers de Scale
@@ -34,6 +36,8 @@ tests/        pytest (roda sem rádio, usando o simulador)
 2. **Tudo que toca a serial roda no worker.** Na UI, use `app.run(fn, ...)`;
    `fn(radio)` roda na thread de fundo, `then(result)` roda na thread Tk.
    Nunca chame `radio.*` direto de um handler de botão.
+   Quadros espontâneos do rádio (Auto Information) chegam por
+   `Radio.on_frame` → `App._handle_frame`; novos tipos de quadro entram ali.
 3. **Nunca leia/escreva variáveis Tk fora da thread principal.** Capture o
    valor antes de criar o job.
 4. **Todo comando CAT novo precisa de referência ao manual** ("FTX-1 CAT

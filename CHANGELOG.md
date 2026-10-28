@@ -2,6 +2,39 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.3.0] — 2026-10-28
+
+Baseado no "FTX-1 CAT Operation Reference Manual" rev. 2507-B (texto em
+`docs/manuals/`). Testado contra o simulador; validar com o rádio antes de
+publicar.
+
+### Adicionado
+- **Auto Information (`AI1;`)**: o rádio passa a avisar sozinho quando
+  frequência, modo ou estado mudam; o display acompanha o dial físico na hora
+  e o log não é mais inundado por `FA;`. Se o rádio recusar, o app volta ao
+  polling (indicador LIVE/POLL na faixa de status).
+- **Faixa de status** com indicadores do quadro `RI` (RX/TX/TX INHIBIT,
+  HI-SWR, BUSY, TUNE, SCAN), **S-meter** em recepção e **PO/SWR/ALC** em
+  transmissão (`SM`/`RM`, valores brutos 0-255).
+- **RF POWER respeita o hardware**: lê o P1 do comando `PC` (1 = field head
+  5-10 W, 2 = SPA-1 5-100 W) e ajusta a faixa do slider e o comando de
+  escrita; antes era fixo em `PC2`.
+- **Aba Memories**: lê uma faixa de canais (`MR`/`MT`), edita frequência,
+  modo, etiqueta, shift e tipo de SQL, grava com diff e confirmação
+  (`MW`/`MT`), chama o canal (`VM`/`MC`), "Store VFO here", exporta e
+  importa **CSV**.
+- Identificação mostra a versão de todos os CPUs (`VE0..5`).
+- `IF;` substitui `FA;` + `MD0;` nas leituras de sintonia; o display indica
+  o canal de memória quando o rádio está em modo memória.
+- Simulador: `turn_dial()`, `change_mode()`, `set_tx()`, `set_smeter()`,
+  memórias e `head` (field head / SPA-1) para testar sem rádio.
+- 17 testes novos (71 no total): quadros espontâneos, fallback de polling,
+  medidores, potência por hardware, memórias e CSV.
+
+### Alterado
+- Leitura periódica virou um "tick" de 250 ms que recolhe quadros AI e lê
+  `RI` + medidores (sem AI, também `IF` a cada 600 ms).
+
 ## [0.2.0] — 2026-10-28
 
 ### Adicionado

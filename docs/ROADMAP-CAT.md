@@ -14,11 +14,16 @@ de menu nas pp. 68-73). Todas as referências de página abaixo são do manual C
 | `RPT SHIFT (144/430 MHz)` | CAT: "0 - 100 MHz (P4 = 0000 - 0100, 50 kHz/step)"; Operation Manual p. 71: "0.00 - 100 (MHz) (50kHz/step)" | Continua contraditório (100 MHz / 50 kHz = 2000 passos ≠ 0100). Manter somente leitura. |
 | Defaults de fábrica | Operation Manual pp. 68-73 traz o default de cada item ("0 - **50** - 100") | Possível coluna "default" na tabela do menu → botão "Reset to default" e diff contra o padrão de fábrica. |
 
-## 2. Comandos já usados pelo app (v0.2)
+## 2. Comandos já usados pelo app (v0.3)
 
-`ID`, `VE0`, `FA`, `MD0`, `BS0`, `EX` (menu), `PC`, `SS01/03/04` (peak, color,
-level do scope), `NL0`, `RL0`, `MG`, `PL`, `AO`, `VG`, `VD`, `ML1`, `KS`,
-`KP`, `SD`, `DA`.
+`ID`, `VE0..5`, `AI`, `IF`, `FA`, `MD0`, `BS0`, `EX` (menu), `RI`, `SM`,
+`RM`, `PC` (com P1), `SS01/03/04` (peak, color, level do scope), `NL0`, `RL0`,
+`MG`, `PL`, `AO`, `VG`, `VD`, `ML1`, `KS`, `KP`, `SD`, `DA`, `MR`, `MW`,
+`MT`, `MC`, `VM`.
+
+Feitos na v0.3: itens 1, 2, 3, 4, 5, 6 e 22 (memórias, sem PMS/QMB/split
+memory). O MCP e o servidor rigctld (25) ficaram de fora por decisão do
+projeto.
 
 ## 3. O que já dá para implementar (tudo documentado no manual)
 

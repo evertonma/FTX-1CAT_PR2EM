@@ -63,7 +63,8 @@ def test_connect_reads_everything(app):
     assert app.quick.freq_lbl.cget("text") == "28.410.000 Hz"
     assert app.quick.mode_var.get() == "2"
     assert app.quick.cards["RF POWER"].value_lbl.cget("text") == "13 W"
-    assert "ID" in fake.sent and "FA" in fake.sent
+    assert "ID" in fake.sent and "IF" in fake.sent and "AI1" in fake.sent
+    assert app.status.chips["live"].cget("text") == "LIVE"
 
 
 def test_band_mode_and_slider(app):
@@ -92,12 +93,81 @@ def test_band_mode_and_slider(app):
     assert fake.frequency == 144_800_000 + 3_000
 
 
-def test_frequency_poll_follows_physical_dial(app):
+def test_auto_information_follows_physical_dial(app):
     app.connect()
     wait_idle(app)
-    app.radio.ser.frequency = 7_100_000               # "girou o dial" no rádio
+    fake = app.radio.ser
+    fake.turn_dial(7_100_000)                         # "girou o dial": rádio emite FA/IF
+    pump(app, 0.8)
+    assert app.quick.freq_lbl.cget("text") == "7.100.000 Hz"
+    fake.change_mode("4")                             # mudou para FM no painel
+    wait_idle(app)
+    pump(app, 0.6)
+    assert app.quick.mode_var.get() == "4"
+    assert "12.5 kHz" in app.quick.freq_hint.cget("text")   # CH STEP de FM relido
+    assert "IF" in fake.sent
+
+
+def test_polling_fallback_when_ai_rejected(app, monkeypatch):
+    from ftx1cat.cat.simulator import FakeFTX1
+    original = FakeFTX1._handle
+
+    def no_ai(self, cmd):
+        return "?;" if cmd.startswith("AI") else original(self, cmd)
+
+    monkeypatch.setattr(FakeFTX1, "_handle", no_ai)
+    app.connect()
+    wait_idle(app)
+    assert app.status.chips["live"].cget("text") == "POLL"
+    app.radio.ser.frequency = 7_100_000               # sem AI: só o polling percebe
     pump(app, 1.5)
     assert app.quick.freq_lbl.cget("text") == "7.100.000 Hz"
+
+
+def test_status_bar_and_meters(app):
+    app.connect()
+    wait_idle(app)
+    fake = app.radio.ser
+    pump(app, 0.6)
+    assert app.status.chips["tx"].cget("text") == "RX"
+    assert app.status.meters["S"].value.cget("text") == "120"
+    fake.meters["5"], fake.meters["6"] = 200, 30
+    fake.set_tx(True)                                  # quadro RI via AI + tick lê RM
+    pump(app, 0.8)
+    assert app.status.chips["tx"].cget("text") == "TX"
+    assert app.transmitting
+    assert app.status.meters["5"].value.cget("text") == "200"
+    assert app.status.meters["6"].value.cget("text") == "30"
+    assert app.status.meters["S"].value.cget("text") == "—"
+    fake.set_tx(False)
+    pump(app, 0.8)
+    assert app.status.chips["tx"].cget("text") == "RX"
+
+
+def test_rf_power_follows_head(app):
+    app.connect()
+    wait_idle(app)
+    card = app.quick.cards["RF POWER"]
+    assert float(card.scale.cget("to")) == 100 and "SPA-1" in card.cget("text")
+    card.var.set(50)
+    card._moved("50")
+    wait_idle(app)
+    assert app.radio.ser.watts == 50 and "PC2050" in app.radio.ser.sent
+
+
+def test_rf_power_field_head(tmp_path):
+    from ftx1cat.cat.simulator import FakeFTX1
+    application = App(settings=Settings(tmp_path / "s.json"), simulate=True)
+    application.withdraw()
+    try:
+        application._open_port = lambda: FakeFTX1(head="1")
+        application.connect()
+        wait_idle(application)
+        card = application.quick.cards["RF POWER"]
+        assert float(card.scale.cget("to")) == 10 and "field head" in card.cget("text")
+        assert card.value_lbl.cget("text") == "8 W"
+    finally:
+        application._close()
 
 
 def test_func_parameter_roundtrip(app):
@@ -183,3 +253,53 @@ def test_disconnect_and_settings_saved(app, tmp_path):
     saved = json.loads((tmp_path / "settings.json").read_text(encoding="utf-8"))
     assert saved["port"] == "SIM"
     assert saved["baud"] == "38400"
+
+
+def test_memory_page_read_edit_write_recall(app, monkeypatch, tmp_path):
+    from ftx1cat.cat import commands as C
+    app.connect()
+    wait_idle(app)
+    page = app.memories
+    page.from_var.set(1)
+    page.to_var.set(6)
+    page.read_range()
+    wait_idle(app, 10)
+    assert page.tree.item("1", "values")[1] == "FT8 40m"
+    assert page.tree.item("4", "values")[2] == "(empty)"
+    assert "4 in use" in page.status.cget("text")
+
+    # edita o canal 4 (vazio) como se fosse pelo diálogo
+    row = page.rows[4]
+    page._edited(row, C.Info("00004", 145_500_000, 0, False, False, "4", "1", "0", "1"), "NOVO")
+    assert page.tree.item("4", "values")[-1] == "New (not written)"
+    monkeypatch.setattr("ftx1cat.ui.memory_page.messagebox.askokcancel", lambda *a, **k: True)
+    page.write_dirty()
+    wait_idle(app, 10)
+    fake = app.radio.ser
+    assert fake.memories[4].frequency == 145_500_000 and fake.tags[4] == "NOVO"
+    assert page.tree.item("4", "values")[-1] == "Read"
+
+    # recall
+    page.tree.selection_set("4")
+    page.recall_selected()
+    wait_idle(app)
+    assert app.quick.freq_lbl.cget("text") == "145.500.000 Hz"
+    assert "MEM 4" in app.quick.freq_hint.cget("text")
+
+    # export / import
+    out = tmp_path / "mem.csv"
+    monkeypatch.setattr("ftx1cat.ui.memory_page.filedialog.asksaveasfilename", lambda **k: str(out))
+    page.export_csv()
+    assert "FT8 40m" in out.read_text(encoding="utf-8")
+    out.write_text("channel,tag,frequency_hz,mode\n7,CSV,7100000,LSB\n", encoding="utf-8")
+    monkeypatch.setattr("ftx1cat.ui.memory_page.filedialog.askopenfilename", lambda **k: str(out))
+    page.import_csv()
+    assert page.tree.item("7", "values")[1] == "CSV" and page.rows[7].dirty
+
+    # store VFO no canal 8
+    page._row(8)
+    page._refresh_row(page.rows[8])
+    page.tree.selection_set("8")
+    page.store_vfo()
+    wait_idle(app)
+    assert page.rows[8].edit.frequency == 145_500_000

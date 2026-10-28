@@ -7,6 +7,7 @@ log e execução de trabalhos em segundo plano.
 import datetime
 import logging
 import queue
+import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 from typing import Callable, Optional
@@ -16,15 +17,19 @@ from serial.tools import list_ports
 
 from .. import __app_name__, __version__
 from ..cat import CatError, Radio
+from ..cat import commands as C
+from .memory_page import MemoryPage
 from .menu_page import MenuPage
 from .quick_controls import QuickControlsPage
 from .settings import Settings
+from .status_bar import StatusBar
 from .theme import AMBER, BAUDS, GRAY, GREEN, RED, SEP
 from .worker import SerialWorker
 
 log = logging.getLogger(__name__)
 
-POLL_MS = 600          # leitura periódica da frequência (dial físico)
+TICK_MS = 250           # ciclo de estado: recolhe quadros AI, lê RI e medidores
+POLL_MS = 600           # sem AI: leitura periódica da sintonia (IF;)
 SIMULATOR_PORT = "SIM"  # nome mostrado no combo de portas em --simulate
 
 
@@ -43,7 +48,9 @@ class App(tk.Tk):
         self.fw = ""
         self.q: "queue.Queue[Callable[[], None]]" = queue.Queue()
         self.worker = SerialWorker(self.ui, self._on_idle_change)
-        self._poll_id = None
+        self._tick_id = None
+        self._last_info_poll = 0.0
+        self.transmitting = False
 
         self._build_ui()
         found = self.refresh_ports()
@@ -100,6 +107,9 @@ class App(tk.Tk):
         self.prog_lbl = ttk.Label(top, text="", foreground=GRAY)
         self.prog_lbl.pack(side="right", padx=10)
 
+        self.status = StatusBar(self)
+        self.status.pack(fill="x", padx=6)
+
         # Abas em cima, log embaixo, com divisor arrastável entre os dois.
         split = ttk.PanedWindow(self, orient="vertical")
         split.pack(fill="both", expand=True, padx=6)
@@ -109,6 +119,8 @@ class App(tk.Tk):
         self.pages.add(self.quick, text="Quick Controls")
         self.menu = MenuPage(self.pages, self)
         self.pages.add(self.menu, text="CAT Menu")
+        self.memories = MemoryPage(self.pages, self)
+        self.pages.add(self.memories, text="Memories")
         self.pages.select(self.quick)
 
         logf = ttk.Frame(split, padding=(0, 4, 0, 6))
@@ -233,22 +245,32 @@ class App(tk.Tk):
         port = self.port_var.get().split(SEP)[0].strip()
         self.settings.set("port", port)
         self.settings.set("baud", self.baud_var.get())
-        self.radio = Radio(ser, logger=self._cat_log)
+        self.radio = Radio(ser, logger=self._cat_log, on_frame=self._frame_from_radio)
         self.btn_conn.config(text="Disconnect")
         self.conn_lbl.config(text="Connecting…", foreground=AMBER)
         self.log(f"Port {port} opened at {self.baud_var.get()} bps, 8N1.")
 
         def job(radio):
-            return radio.identify(), radio.firmware(0)
+            rid = radio.identify()
+            fws = radio.firmwares()
+            ai = radio.set_auto_information(True)
+            return rid, fws, ai
 
         def then(result):
-            rid, fw = result
-            self.fw = fw
-            self.conn_lbl.config(text=f"Connected • ID {rid} • MAIN FW {fw}", foreground=GREEN)
-            self.log(f"Radio responded: ID {rid}, MAIN firmware {fw}.")
+            rid, fws, ai = result
+            self.fw = dict(fws).get("MAIN", "")
+            self.conn_lbl.config(text=f"Connected • ID {rid} • MAIN FW {self.fw}", foreground=GREEN)
+            versions = ", ".join(f"{name} {fw}" for name, fw in fws)
+            self.log(f"Radio responded: ID {rid}. Firmware: {versions}.")
+            self.status.set_live(ai)
+            if ai:
+                self.log("Auto Information on: the radio reports changes by itself.")
+            else:
+                self.log("Auto Information not accepted; falling back to periodic reads.")
             self.quick.on_connected()
             self.menu.on_connected()
-            self._schedule_poll()
+            self.memories.on_connected()
+            self._schedule_tick()
 
         def on_error(exc):
             self.conn_lbl.config(text="No response from radio", foreground=RED)
@@ -260,15 +282,24 @@ class App(tk.Tk):
 
     def disconnect(self):
         self.worker.stop()
-        self._cancel_poll()
+        self._cancel_tick()
         radio, self.radio = self.radio, None
         if radio:
+            if radio.auto_information:
+                try:
+                    radio.quiet = True
+                    radio.send(C.auto_information_cmd(False))   # best effort, 20 ms
+                except Exception:   # noqa: BLE001 - porta pode já estar morta
+                    pass
             radio.close()
         self.btn_conn.config(text="Connect")
         self.conn_lbl.config(text="Disconnected", foreground=GRAY)
         self.prog_lbl.config(text="")
+        self.transmitting = False
+        self.status.clear()
         self.quick.on_disconnected()
         self.menu.on_disconnected()
+        self.memories.on_disconnected()
         self.log("Disconnected.")
 
     def need_conn(self) -> bool:
@@ -326,39 +357,87 @@ class App(tk.Tk):
             pass
 
     # ======================================================================
-    # Leitura periódica da frequência (acompanha o dial físico)
+    # Quadros espontâneos (Auto Information) e ciclo de estado
     # ======================================================================
-    def _schedule_poll(self):
-        self._cancel_poll()
+    def _frame_from_radio(self, frame: str):          # chamado da thread serial
+        self.ui(lambda: self._handle_frame(frame))
+
+    def _handle_frame(self, frame: str):
+        """Despacha um quadro que o rádio mandou por conta própria."""
+        try:
+            if frame.startswith("IF"):
+                self.quick.on_info(C.parse_info(frame))
+            elif frame.startswith("FA"):
+                self.quick.on_frequency_polled(C.parse_frequency(frame))
+            elif frame.startswith("MD0"):
+                self.quick.on_mode(C.parse_mode(frame))
+            elif frame.startswith("RI0"):
+                self._show_status(C.parse_status(frame))
+            elif frame.startswith("RM"):
+                self.status.show_meter(*C.parse_meter(frame))
+            elif frame.startswith("SM0"):
+                self.status.show_smeter(C.parse_smeter(frame))
+            elif frame.startswith("PC"):
+                self.quick.on_rf_power(*C.parse_pc(frame))
+        except (ValueError, IndexError) as exc:
+            log.debug("ignored frame %r: %s", frame, exc)
+
+    def _show_status(self, st: C.RadioStatus):
+        was_tx = self.transmitting
+        self.transmitting = st.transmitting
+        self.status.show_status(st)
+        if was_tx != self.transmitting:
+            self.status.transmitting(self.transmitting)
+
+    def _schedule_tick(self):
+        self._cancel_tick()
         if self.radio:
-            self._poll_id = self.after(POLL_MS, self._poll)
+            self._tick_id = self.after(TICK_MS, self._tick)
 
-    def _cancel_poll(self):
-        if self._poll_id is not None:
-            self.after_cancel(self._poll_id)
-            self._poll_id = None
+    def _cancel_tick(self):
+        if self._tick_id is not None:
+            self.after_cancel(self._tick_id)
+            self._tick_id = None
 
-    def _poll(self):
-        self._poll_id = None
+    def _tick(self):
+        """A cada TICK_MS, com a serial ociosa: recolhe quadros AI, lê o estado
+        (RI) e os medidores; sem AI, lê também a sintonia (IF) a cada POLL_MS."""
+        self._tick_id = None
         if not self.radio:
             return
         if not self.worker.is_idle():          # não compete com operações do usuário
-            self._schedule_poll()
+            self._schedule_tick()
             return
-
-        def then(hz):
-            self.quick.on_frequency_polled(hz)
-            self._schedule_poll()
-
+        now = time.monotonic()
+        want_info = (not self.radio.auto_information) and (now - self._last_info_poll) * 1000 >= POLL_MS
         def job(radio):
-            radio.quiet = True                 # não polui o log com FA; a cada 0,6 s
+            radio.quiet = True                 # não polui o log a cada 250 ms
             try:
-                return radio.read_frequency()
+                radio.pump()
+                st = radio.read_status()
+                meters = {}
+                if st.transmitting:
+                    for which in C.TX_METERS:
+                        meters[which] = radio.read_meter(which)
+                else:
+                    meters["1"] = radio.read_smeter()
+                info = radio.read_info() if want_info else None
+                return st, meters, info
             finally:
                 radio.quiet = False
 
-        self.run(job, "Periodic frequency read", then, key="poll", quiet=True,
-                 on_error=lambda _e: self._schedule_poll())
+        def then(result):
+            st, meters, info = result
+            self._show_status(st)
+            for which, raw in meters.items():
+                self.status.show_meter(which, raw)
+            if info is not None:
+                self._last_info_poll = now
+                self.quick.on_info(info)
+            self._schedule_tick()
+
+        self.run(job, "Status tick", then, key="tick", quiet=True,
+                 on_error=lambda _e: self._schedule_tick())
 
     # ======================================================================
     # Encerramento

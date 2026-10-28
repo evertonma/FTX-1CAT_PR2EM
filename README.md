@@ -56,8 +56,8 @@
 Open PowerShell in the folder where you want to store the project:
 
 ```powershell
-git clone https://github.com/evertonma/pr2em_ham.git
-cd pr2em_ham
+git clone https://github.com/evertonma/FTX-1CAT_PR2EM.git
+cd FTX-1CAT_PR2EM
 py -m venv .venv
 ```
 
@@ -123,7 +123,7 @@ Serial reads and writes run in the background to keep the interface responsive.
 ## 🗂️ Project structure
 
 ```text
-pr2em_ham/
+FTX-1CAT_PR2EM/
 ├── ftx1_cat_menu.py   # Tkinter interface and CAT operations
 ├── ftx1_menu.py       # EX menu item table and serial CAT transport
 ├── requirements.txt   # Python dependencies
@@ -206,8 +206,8 @@ Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex*
 Abra o PowerShell na pasta onde deseja guardar o projeto:
 
 ```powershell
-git clone https://github.com/evertonma/pr2em_ham.git
-cd pr2em_ham
+git clone https://github.com/evertonma/FTX-1CAT_PR2EM.git
+cd FTX-1CAT_PR2EM
 py -m venv .venv
 ```
 
@@ -273,7 +273,7 @@ As leituras e gravações seriais são executadas em segundo plano para manter a
 ## 🗂️ Estrutura do projeto
 
 ```text
-pr2em_ham/
+FTX-1CAT_PR2EM/
 ├── ftx1_cat_menu.py   # Interface Tkinter e operações CAT
 ├── ftx1_menu.py       # Tabela de itens do menu EX e comunicação serial CAT
 ├── requirements.txt   # Dependências Python

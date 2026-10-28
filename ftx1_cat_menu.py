@@ -568,7 +568,23 @@ class App(tk.Tk):
         return 30_000 <= frequency <= 174_000_000 or 400_000_000 <= frequency <= 470_000_000
 
     @classmethod
-    def _frequency_from_entry_digits(cls, digits):
+    def _frequency_from_entry_digits(cls, entry_text):
+        # Explicit thousands groups use the radio display convention. Missing
+        # right-hand groups are padded (14.400 -> 14.400.000 Hz).
+        entry_text = str(entry_text).strip()
+        for separator in (".", ","):
+            if separator not in entry_text:
+                continue
+            groups = entry_text.split(separator)
+            if (len(groups) <= 3 and 1 <= len(groups[0]) <= 3
+                    and groups[0].isdigit()
+                    and all(len(group) == 3 and group.isdigit() for group in groups[1:])):
+                grouped_digits = "".join(groups)
+                grouped_digits += "0" * (3 - len(groups)) * 3
+                return int(grouped_digits)
+            break
+
+        digits = "".join(char for char in entry_text if char.isdigit())
         # Four digits can be entered as MHz with one decimal (1448 -> 144.8 MHz).
         if len(digits) == 4:
             mhz_candidate = int(digits[:3]) * 1_000_000 + int(digits[3]) * 100_000
@@ -607,6 +623,7 @@ class App(tk.Tk):
         ttk.Label(
             body,
             text=("Enter up to 9 digits. Punctuation is added automatically.\n"
+                  "Periods and commas are accepted as thousands separators.\n"
                   "Examples: 1448 becomes 144.800.000 Hz; 14400 becomes 14.400.000 Hz; "
                   "27555 becomes 27.555.000 Hz."),
             justify="left", wraplength=360,
@@ -623,7 +640,7 @@ class App(tk.Tk):
             if not digits:
                 messagebox.showwarning("Frequency", "Enter a frequency.", parent=dialog)
                 return "break"
-            target = self._frequency_from_entry_digits(digits)
+            target = self._frequency_from_entry_digits(frequency_var.get())
             if not 30_000 <= target <= 470_000_000:
                 messagebox.showerror(
                     "Frequency out of range",
@@ -662,7 +679,7 @@ class App(tk.Tk):
             if not digits:
                 preview_var.set("Target frequency: —")
             else:
-                target = self._frequency_from_entry_digits(digits)
+                target = self._frequency_from_entry_digits(original)
                 if self._frequency_in_rx_range(target):
                     preview_var.set(f"Target frequency: {self._format_frequency(target)} Hz")
                 else:

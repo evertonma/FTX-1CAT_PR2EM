@@ -381,7 +381,7 @@ class App(tk.Tk):
         band_options = [
             ("00", "160m"), ("01", "80m"), ("02", "60m"), ("03", "40m"),
             ("04", "30m"), ("05", "20m"), ("06", "17m"), ("07", "15m"),
-            ("08", "12m"), ("09", "10m"), ("10", "6m"), ("11", "4m/GEN"),
+            ("08", "12m"), ("09", "10m"), ("11m", "11m"), ("10", "6m"), ("11", "4m/GEN"),
             ("12", "AIR"), ("13", "2m"), ("14", "70cm"),
         ]
         for index, (band_code, label) in enumerate(band_options):
@@ -716,9 +716,13 @@ class App(tk.Tk):
         radio = self.radio
 
         def job():
-            # BS seleciona a banda no MAIN (P1=0); o rÃ¡dio recupera sua prÃ³pria
-            # memÃ³ria Band Stack, sem o programa impor uma frequÃªncia via FA.
-            radio.send(f"BS0{band_code};")
+            if band_code == "11m":
+                # O CAT Band Select nÃ£o define uma entrada de 11 m. Sintoniza
+                # 27.555 MHz (frequÃªncia de chamada DX em USB) diretamente.
+                radio.send(f"FA{27_555_000:09d};")
+            else:
+                # O rÃ¡dio recupera a prÃ³pria memÃ³ria Band Stack, sem impor FA.
+                radio.send(f"BS0{band_code};")
             frequency = int(radio.query("FA;", "FA")[2:-1])
             mode = self._read_main_mode(radio)
             item, _ = self._ch_step_for_mode(mode)

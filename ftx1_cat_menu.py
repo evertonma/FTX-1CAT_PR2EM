@@ -25,9 +25,9 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 
-# Algumas instalaÃ§Ãµes do Python no Windows guardam Tcl/Tk em `tcl/`, mas o
-# tkinter tenta encontrÃ¡-los em `lib/`. Definir estes caminhos antes de criar
-# a janela permite iniciar o app sem configurar variÃ¡veis no PowerShell.
+# Algumas instalações do Python no Windows guardam Tcl/Tk em `tcl/`, mas o
+# tkinter tenta encontrá-los em `lib/`. Definir estes caminhos antes de criar
+# a janela permite iniciar o app sem configurar variáveis no PowerShell.
 _tcl_root = Path(sys.base_prefix) / "tcl"
 _tcl_dir = next((p for p in _tcl_root.glob("tcl*") if (p / "init.tcl").is_file()), None)
 _tk_dir = next((p for p in _tcl_root.glob("tk*") if (p / "tk.tcl").is_file()), None)
@@ -41,7 +41,7 @@ from serial.tools import list_ports
 
 from ftx1_menu import BY_KEY, MENU, CatError, Radio, all_items
 
-SEP = " â€“ "
+SEP = " – "
 BAUDS = ["4800", "9600", "19200", "38400", "115200"]
 GREEN, RED, GRAY, AMBER = "#1a7f37", "#b42318", "#555555", "#9a6700"
 ALL_ITEMS = all_items()
@@ -102,7 +102,7 @@ class Row:
         self.alive = True
         self.var = tk.StringVar()
 
-        title = f"{item.path1} â€º {item.path2} â€º {item.name}" if crumb else item.name
+        title = f"{item.path1} › {item.path2} › {item.name}" if crumb else item.name
         ttk.Label(parent, text=f"{item.p3:02d}", width=3, anchor="e").grid(
             row=r, column=0, padx=(4, 2), pady=2, sticky="e")
         ttk.Label(parent, text=title, anchor="w").grid(row=r, column=1, padx=4, sticky="w")
@@ -249,7 +249,7 @@ class App(tk.Tk):
         self.port_var = tk.StringVar()
         self.port_cb = ttk.Combobox(top, textvariable=self.port_var, width=46)
         self.port_cb.pack(side="left", padx=4)
-        ttk.Button(top, text="â†»", width=3, command=self.refresh_ports).pack(side="left")
+        ttk.Button(top, text="↻", width=3, command=self.refresh_ports).pack(side="left")
         ttk.Label(top, text="Baud rate:").pack(side="left", padx=(10, 2))
         self.baud_var = tk.StringVar(value="38400")
         ttk.Combobox(top, textvariable=self.baud_var, values=BAUDS, width=8,
@@ -307,8 +307,8 @@ class App(tk.Tk):
         self.auto_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(bar, text="Read when opening a group", variable=self.auto_var).pack(
             side="left", padx=12)
-        ttk.Button(bar, text="Save Backupâ€¦", command=self.backup).pack(side="right")
-        ttk.Button(bar, text="Restore Backupâ€¦", command=self.restore).pack(side="right", padx=4)
+        ttk.Button(bar, text="Save Backup…", command=self.backup).pack(side="right")
+        ttk.Button(bar, text="Restore Backup…", command=self.restore).pack(side="right", padx=4)
         self.prog_lbl = ttk.Label(bar, text="", foreground=GRAY)
         self.prog_lbl.pack(side="right", padx=10)
 
@@ -364,7 +364,7 @@ class App(tk.Tk):
                                       highlightthickness=0, bd=0,
                                       command=self._ch_step_slider_moved)
         self.ch_step_scale.pack(fill="y", expand=True, anchor="center")
-        self.ch_step_value = ttk.Label(self.ch_step_frame, text="â€”", width=9,
+        self.ch_step_value = ttk.Label(self.ch_step_frame, text="—", width=9,
                                        font=("TkDefaultFont", 7), anchor="center")
         self.ch_step_value.pack(fill="x", pady=(0, 1))
         self._bind_scale_click(self.ch_step_scale,
@@ -411,9 +411,9 @@ class App(tk.Tk):
                   foreground=GRAY).grid(row=1, column=0, columnspan=2, sticky="w", pady=(0, 10))
 
         power_var = tk.DoubleVar(value=5)
-        power_card = ttk.LabelFrame(parent, text="RF POWER â€” SPA-1", padding=10)
+        power_card = ttk.LabelFrame(parent, text="RF POWER — SPA-1", padding=10)
         power_card.grid(row=2, column=0, sticky="nsew", padx=(0, 6), pady=5)
-        power_value = ttk.Label(power_card, text="â€” W", font=("TkDefaultFont", 14, "bold"))
+        power_value = ttk.Label(power_card, text="— W", font=("TkDefaultFont", 14, "bold"))
         power_value.pack(anchor="center")
         power_scale = tk.Scale(power_card, variable=power_var, from_=5, to=100, resolution=1,
                                orient="horizontal", showvalue=False, length=420,
@@ -431,7 +431,7 @@ class App(tk.Tk):
         level_var = tk.DoubleVar(value=0)
         level_card = ttk.LabelFrame(parent, text="D-LEVEL", padding=10)
         level_card.grid(row=2, column=1, sticky="nsew", padx=(6, 0), pady=5)
-        level_value = ttk.Label(level_card, text="â€” dB", font=("TkDefaultFont", 14, "bold"))
+        level_value = ttk.Label(level_card, text="— dB", font=("TkDefaultFont", 14, "bold"))
         level_value.pack(anchor="center")
         level_scale = tk.Scale(level_card, variable=level_var, from_=-30, to=30, resolution=0.5,
                                orient="horizontal", showvalue=False, length=420,
@@ -556,7 +556,7 @@ class App(tk.Tk):
         return {"1": "LSB", "2": "USB", "3": "CW-U", "4": "FM", "5": "AM",
                 "6": "RTTY-L", "7": "CW-L", "8": "DATA-L", "9": "RTTY-U",
                 "A": "DATA-FM", "B": "FM-N", "C": "DATA-U", "D": "AM-N",
-                "E": "PSK", "F": "DATA-FM-N", "H": "C4FM-DN", "I": "C4FM-VW"}.get(mode, "â€”")
+                "E": "PSK", "F": "DATA-FM-N", "H": "C4FM-DN", "I": "C4FM-VW"}.get(mode, "—")
 
     @staticmethod
     def _format_frequency(frequency):
@@ -589,7 +589,7 @@ class App(tk.Tk):
         self.mode_var.set(mode)
         mode_name = self._mode_name(mode)
         step_text = f"Step: {step_khz:g} kHz" if step_khz is not None else "Scroll the dial to tune"
-        self.frequency_hint.config(text=f"{mode_name}  â€¢  {step_text}")
+        self.frequency_hint.config(text=f"{mode_name}  •  {step_text}")
 
     def _open_frequency_dialog(self, _event=None):
         dialog = tk.Toplevel(self)
@@ -695,7 +695,7 @@ class App(tk.Tk):
             try:
                 frame = radio.query("FA;", "FA")
                 return int(frame[2:-1])
-            except Exception:  # noqa: BLE001 - a falha de um ciclo nÃ£o encerra a leitura periÃ³dica
+            except Exception:  # noqa: BLE001 - a falha de um ciclo não encerra a leitura periódica
                 return None
 
         def then(frequency):
@@ -717,11 +717,11 @@ class App(tk.Tk):
 
         def job():
             if band_code == "11m":
-                # O CAT Band Select nÃ£o define uma entrada de 11 m. Sintoniza
-                # 27.555 MHz (frequÃªncia de chamada DX em USB) diretamente.
+                # O CAT Band Select não define uma entrada de 11 m. Sintoniza
+                # 27.555 MHz (frequência de chamada DX em USB) diretamente.
                 radio.send(f"FA{27_555_000:09d};")
             else:
-                # O rÃ¡dio recupera a prÃ³pria memÃ³ria Band Stack, sem impor FA.
+                # O rádio recupera a própria memória Band Stack, sem impor FA.
                 radio.send(f"BS0{band_code};")
             frequency = int(radio.query("FA;", "FA")[2:-1])
             mode = self._read_main_mode(radio)
@@ -741,13 +741,13 @@ class App(tk.Tk):
         canvas = self.frequency_knob
         canvas.delete("all")
         cx = cy = 48
-        # Aro e corpo do dial, com bordas concÃªntricas em relevo.
+        # Aro e corpo do dial, com bordas concêntricas em relevo.
         canvas.create_oval(5, 5, 91, 91, fill="#111315", outline="#08090a", width=2)
         canvas.create_oval(7, 7, 89, 89, fill="#303438", outline="#85898c", width=2)
         canvas.create_oval(11, 11, 85, 85, fill="#1c1f22", outline="#090a0b", width=2)
         canvas.create_oval(15, 15, 81, 81, fill="#34383b", outline="#555a5e", width=1)
 
-        # Ranhuras radiais na face, inspiradas no acabamento facetado do dial fÃ­sico.
+        # Ranhuras radiais na face, inspiradas no acabamento facetado do dial físico.
         for groove in range(24):
             angle = math.radians(groove * 15 - 90)
             inner = 12
@@ -1148,7 +1148,7 @@ class App(tk.Tk):
         if self.current_mode:
             step_khz = float(value.split()[0])
             self.frequency_hint.config(
-                text=f"{mode_label}  â€¢  Step: {step_khz:g} kHz")
+                text=f"{mode_label}  •  Step: {step_khz:g} kHz")
 
     def _ch_step_slider_moved(self, value):
         if not self.ch_step_item or self.setting_ch_step_from_radio:
@@ -1259,7 +1259,7 @@ class App(tk.Tk):
         def then(value):
             self._show_quick_value(name, value)
             self.log(f"{name} set to {spec['display'](value)}")
-        self.quick_status[name].config(text="Sendingâ€¦", foreground=AMBER)
+        self.quick_status[name].config(text="Sending…", foreground=AMBER)
         self.run_bg(job, f"Setting {name}", then)
 
     def _set_ch_step(self):
@@ -1288,7 +1288,7 @@ class App(tk.Tk):
         def then(result):
             self._show_ch_step(result)
             self.log(f"CH STEP ({result[2]}) set to {dict(result[1].opts).get(result[0], result[0])} kHz.")
-        self.quick_status["CH STEP"].config(text="Sendingâ€¦", foreground=AMBER)
+        self.quick_status["CH STEP"].config(text="Sending…", foreground=AMBER)
         self.run_bg(job, "Setting CH STEP", then)
 
     # -- log ----------------------------------------------------------------
@@ -1313,7 +1313,7 @@ class App(tk.Tk):
         detected = list(list_ports.comports())
         ports = [f"{p.device}{SEP}{p.description}" for p in detected]
         self.port_cb.config(values=ports)
-        # O CP2105 expÃµe mais de uma interface. Para CAT, usar a Enhanced COM Port.
+        # O CP2105 expõe mais de uma interface. Para CAT, usar a Enhanced COM Port.
         enhanced = [p for p in detected
                     if "cp2105" in (p.description or "").casefold()
                     and "enhanced" in (p.description or "").casefold()]
@@ -1356,7 +1356,7 @@ class App(tk.Tk):
             return
         self.radio = Radio(ser, logger=self._cat_log)
         self.btn_conn.config(text="Disconnect")
-        self.conn_lbl.config(text="Connectingâ€¦", foreground=AMBER)
+        self.conn_lbl.config(text="Connecting…", foreground=AMBER)
         self.log(f"Port {port} opened at {self.baud_var.get()} bps, 8N1.")
 
         def job():
@@ -1372,7 +1372,7 @@ class App(tk.Tk):
                 return
             self.fw = fw
             self.ui(lambda: self.conn_lbl.config(
-                text=f"Connected â€¢ ID {rid} â€¢ MAIN FW {fw}", foreground=GREEN))
+                text=f"Connected • ID {rid} • MAIN FW {fw}", foreground=GREEN))
             self.ui(lambda: self.log(f"Radio responded: ID {rid}, MAIN firmware {fw}."))
             self.ui(self._start_frequency_poll)
             follow_up = self.read_all_visible if self.rows and self.auto_var.get() and self.cur_group else None
@@ -1414,7 +1414,7 @@ class App(tk.Tk):
         self.busy = True
         self.stop.clear()
         if not quiet:
-            self.log(f"{title}â€¦")
+            self.log(f"{title}…")
 
         def runner():
             result, err = None, None
@@ -1466,7 +1466,7 @@ class App(tk.Tk):
             for q2, n2, items in groups:
                 if (q1, q2) == (p1, p2):
                     self.cur_group = (q1, q2)
-                    self.show_items(items, f"{q1:02d} {n1}  â€º  {q2:02d} {n2}")
+                    self.show_items(items, f"{q1:02d} {n1}  ›  {q2:02d} {n2}")
                     if self.radio and self.auto_var.get():
                         self.read_all_visible()
                     return
@@ -1480,7 +1480,7 @@ class App(tk.Tk):
                 if all(t in f"{it.name} {it.path1} {it.path2}".lower() for t in tokens)]
         self.cur_group = None
         note = "  (primeiros 150)" if len(hits) > 150 else ""
-        self.show_items(hits[:150], f"Search â€œ{q}â€: {len(hits)} items{note}", crumb=True)
+        self.show_items(hits[:150], f"Search “{q}”: {len(hits)} items{note}", crumb=True)
 
     def show_items(self, items, title, crumb=False):
         for r in self.rows:
@@ -1503,7 +1503,7 @@ class App(tk.Tk):
             for i, row in enumerate(rows, 1):
                 if self.stop.is_set() or radio is not self.radio:
                     break
-                self.ui(lambda r=row: r.set_status("Readingâ€¦"))
+                self.ui(lambda r=row: r.set_status("Reading…"))
                 try:
                     raw = radio.read_menu(row.item)
                 except CatError:
@@ -1533,9 +1533,9 @@ class App(tk.Tk):
             except ValueError as e:
                 messagebox.showerror("Invalid Value", str(e))
                 return
-        lines = [f"{r.item.path1} â€º {r.item.path2} â€º {r.item.name}  â†’  {r.item.pretty(raw)}"
+        lines = [f"{r.item.path1} › {r.item.path2} › {r.item.name}  →  {r.item.pretty(raw)}"
                  for r, raw in plan]
-        text = "\n".join(lines[:20]) + (f"\nâ€¦ e mais {len(lines) - 20}" if len(lines) > 20 else "")
+        text = "\n".join(lines[:20]) + (f"\n… e mais {len(lines) - 20}" if len(lines) > 20 else "")
         if any(r.item.risky for r, _ in plan):
             text += ("\n\nWarning: CAT-x RATE / STOP BIT / TIME OUT and TUN/LIN PORT SELECT "
                      "change the CAT port configuration. You may need to reconnect using "
@@ -1549,14 +1549,14 @@ class App(tk.Tk):
             for i, (row, raw) in enumerate(plan, 1):
                 if self.stop.is_set() or radio is not self.radio:
                     break
-                self.ui(lambda r=row: r.set_status("Writingâ€¦"))
+                self.ui(lambda r=row: r.set_status("Writing…"))
                 try:
                     back = radio.write_menu(row.item, raw)
                 except CatError:
                     self.ui(lambda r=row: r.set_status("Sent, not confirmed", AMBER))
                 else:
                     if row.item.norm(back) == row.item.norm(raw):
-                        self.ui(lambda r=row, v=back: (r.show_raw(v), r.set_status("Written âœ“", GREEN)))
+                        self.ui(lambda r=row, v=back: (r.show_raw(v), r.set_status("Written ✓", GREEN)))
                     else:
                         self.ui(lambda r=row, v=back: (
                             r.show_raw(v), r.set_status(f"Read back: {v}", RED)))
@@ -1624,7 +1624,7 @@ class App(tk.Tk):
             return
         radio = self.radio
 
-        def job():                                        # 1) descobrir diferenÃ§as
+        def job():                                        # 1) descobrir diferenças
             diffs, skipped = [], 0
             keys = [k for k in saved if k in BY_KEY and BY_KEY[k].writable]
             for i, k in enumerate(keys, 1):
@@ -1650,15 +1650,15 @@ class App(tk.Tk):
             if not diffs:
                 messagebox.showinfo("Restore", "The radio already matches the backup.")
                 return
-            lines = [f"{it.path2} â€º {it.name}: {it.pretty(now)} â†’ {it.pretty(new)}"
+            lines = [f"{it.path2} › {it.name}: {it.pretty(now)} → {it.pretty(new)}"
                      for it, now, new in diffs[:20]]
-            more = f"\nâ€¦ e mais {len(diffs) - 20}" if len(diffs) > 20 else ""
+            more = f"\n… e mais {len(diffs) - 20}" if len(diffs) > 20 else ""
             if not messagebox.askokcancel(
                     "Restore Backup", f"{len(diffs)} items differ from the backup:\n\n"
                     + "\n".join(lines) + more + "\n\nWrite these values to the radio?"):
                 return
 
-            def job2():                                   # 2) gravar diferenÃ§as
+            def job2():                                   # 2) gravar diferenças
                 bad = 0
                 for i, (it, _, new) in enumerate(diffs, 1):
                     if self.stop.is_set() or radio is not self.radio:
@@ -1683,4 +1683,3 @@ class App(tk.Tk):
 
 if __name__ == "__main__":
     App().mainloop()
-

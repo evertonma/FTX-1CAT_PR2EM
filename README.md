@@ -9,6 +9,10 @@
 
 > **Version:** 0.1 Alpha. This project is under development. Use care when writing settings to your radio.
 
+## 📷 Screenshot
+
+![Yaesu FTX-1 CAT Menu showing the Quick Controls tab](docs/screenshot.jpg)
+
 ## 🚀 Features
 
 - **CAT connection:** automatically detects and selects the Silicon Labs CP2105 `Enhanced COM Port` when available. The connection opens after you click **Connect**.
@@ -158,6 +162,10 @@ Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex*
 > Aplicativo desktop em Python para consultar e controlar o transceptor Yaesu FTX-1 pela interface serial CAT. Reúne controles rápidos de operação, seleção de banda e gerenciamento dos parâmetros do menu CAT.
 
 > **Versão:** 0.1 Alfa. O projeto está em desenvolvimento. Tenha cuidado ao gravar configurações no rádio.
+
+## 📷 Captura de tela
+
+![Yaesu FTX-1 CAT Menu na aba Controles Rápidos](docs/screenshot.jpg)
 
 ## 🚀 Funcionalidades
 

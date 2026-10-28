@@ -18,7 +18,7 @@
 - **CAT connection:** automatically detects and selects the Silicon Labs CP2105 `Enhanced COM Port` when available. The connection opens after you click **Connect**.
 - **Radio identification:** reads the radio ID and MAIN firmware version after connecting.
 - **MAIN tuning:** displays the current frequency and periodically tracks changes made with the radio's physical dial.
-- **Direct frequency entry:** accepts abbreviated numeric input, applies separators automatically, and previews the target frequency before sending. For example, `1448` becomes `144.800.000 Hz`, `14400` becomes `14.400.000 Hz`, and `27555` becomes `27.555.000 Hz`.
+- **Direct frequency entry:** accepts periods or commas as thousands separators, fills omitted right-hand groups with zeros, applies consistent punctuation automatically, and previews the target before sending. For example, `14.400` or `14,400` becomes `14.400.000 Hz`.
 - **On-screen dial:** changes frequency with the mouse wheel.
 - **Band selection:** buttons request the FTX-1 CAT band selection and use the radio's internal Band Stack rather than sending a fixed frequency. Since the CAT Band Select list has no 11 m entry, the **11m** button directly tunes to 27.555 MHz (DX calling frequency) while keeping the current mode.
 - **Mode selection:** buttons select available MAIN operating modes.
@@ -102,6 +102,7 @@ Type digits without separators; punctuation is applied automatically.
 | --- | --- |
 | `1448` | `144.800.000 Hz` |
 | `14400` | `14.400.000 Hz` |
+| `14.400` or `14,400` | `14.400.000 Hz` |
 | `27555` | `27.555.000 Hz` |
 
 ### Troubleshooting
@@ -173,7 +174,7 @@ Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex*
 - **Conexão CAT:** detecta e seleciona automaticamente a porta `Enhanced COM Port` do adaptador Silicon Labs CP2105 quando disponível. A conexão é aberta quando você clica em **Connect**.
 - **Identificação do rádio:** lê o ID do rádio e a versão do firmware MAIN após a conexão.
 - **Sintonia MAIN:** exibe a frequência atual e acompanha periodicamente alterações feitas pelo dial físico do rádio.
-- **Entrada direta de frequência:** aceita números abreviados, aplica separadores automaticamente e mostra uma prévia da frequência antes do envio. Por exemplo, `1448` se torna `144.800.000 Hz`, `14400` se torna `14.400.000 Hz` e `27555` se torna `27.555.000 Hz`.
+- **Entrada direta de frequência:** aceita ponto ou vírgula como separador de milhar, completa grupos à direita omitidos com zeros, padroniza a pontuação e mostra uma prévia antes do envio. Por exemplo, `14.400` ou `14,400` se torna `14.400.000 Hz`.
 - **Dial na interface:** altera a frequência com o scroll do mouse.
 - **Seleção de banda:** botões solicitam a seleção de banda via CAT e usam o Band Stack interno do rádio, sem enviar uma frequência fixa. Como a lista CAT Band Select não tem uma entrada para 11 m, o botão **11m** sintoniza diretamente em 27,555 MHz (frequência de chamada DX), mantendo o modo atual.
 - **Seleção de modo:** botões selecionam os modos MAIN disponíveis.
@@ -257,6 +258,7 @@ Digite os números sem separadores; a pontuação é aplicada automaticamente.
 | --- | --- |
 | `1448` | `144.800.000 Hz` |
 | `14400` | `14.400.000 Hz` |
+| `14.400` ou `14,400` | `14.400.000 Hz` |
 | `27555` | `27.555.000 Hz` |
 
 ### Diagnóstico rápido

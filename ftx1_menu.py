@@ -62,25 +62,25 @@ class Item:
         if self.kind == "enum":
             v = str(value)
             if v not in dict(self.opts):
-                raise ValueError(f"{self.name}: opcao invalida '{v}'")
+                raise ValueError(f"{self.name}: invalid option '{v}'")
             return v
         if self.kind in ("int", "sint"):
             try:
                 n = int(str(value).strip())
             except ValueError:
-                raise ValueError(f"{self.name}: '{value}' nao e um numero inteiro")
+                raise ValueError(f"{self.name}: '{value}' is not an integer")
             if not (self.lo <= n <= self.hi):
-                raise ValueError(f"{self.name}: fora da faixa {self.lo} a {self.hi}")
+                raise ValueError(f"{self.name}: outside the range {self.lo} to {self.hi}")
             if self.kind == "int":
                 if (n - self.lo) % self.step:
                     raise ValueError(
-                        f"{self.name}: use passos de {self.step} a partir de {self.lo}")
+                        f"{self.name}: use steps of {self.step} starting at {self.lo}")
                 s = str(n).zfill(self.digits)
                 if len(s) != self.digits:
-                    raise ValueError(f"{self.name}: valor nao cabe em {self.digits} digitos")
+                    raise ValueError(f"{self.name}: value does not fit in {self.digits} digits")
                 return s
             return f"{'+' if n >= 0 else '-'}{abs(n):0{self.digits - 1}d}"
-        raise ValueError(f"{self.name}: item somente leitura")
+        raise ValueError(f"{self.name}: item is read-only")
 
     def decode(self, raw):
         """P4 recebido do radio -> valor (int para numericos, str nos demais)."""
@@ -100,7 +100,7 @@ class Item:
     def pretty(self, raw):
         if self.kind == "enum":
             lab = dict(self.opts).get(raw)
-            return f"{raw} - {lab}" if lab is not None else f"{raw} (fora da tabela)"
+            return f"{raw} - {lab}" if lab is not None else f"{raw} (not in table)"
         if self.kind in ("int", "sint"):
             try:
                 return f"{self.decode(raw)} {self.unit}".strip()
@@ -219,8 +219,8 @@ def _am():          # itens 01-15 iguais ao SSB
     return _ssb()[:15]
 
 
-_RPT_NOTE = ("Manual: 0 - 100 MHz (P4 = 0000 - 0100, passo 50 kHz); "
-             "a unidade do P4 nao esta clara")
+_RPT_NOTE = ("Manual: 0 - 100 MHz (P4 = 0000 - 0100, 50 kHz steps); "
+             "the P4 unit is unclear")
 
 
 def _fm():
@@ -236,7 +236,7 @@ def _fm():
         ro(19, "RPT SHIFT (430MHz)", 4, _RPT_NOTE),
         en(20, "SQL TYPE", "0=OFF|1=ENC|2=TSQ|3=DCS|4=PR FREQ|5=REV TONE"),
         en(21, "TONE FREQ", CTCSS, 2),
-        ro(22, "DCS CODE", 2, "Manual: 00 = 023 ... 103 = 754, mas indica so 2 digitos"),
+        ro(22, "DCS CODE", 2, "Manual: 00 = 023 ... 103 = 754, but specifies only 2 digits"),
         en(23, "DCS RX REVERS", "0=NORMAL|1=REVERS|2=BOTH"),
         en(24, "DCS TX REVERS", "0=NORMAL|1=REVERS"),
         nu(25, "PR FREQ", 300, 3000, 4, 100, "Hz"),
@@ -306,7 +306,7 @@ def _keyer():
 def _general():
     return [
         nu(1, "BEEP LEVEL", 0, 100, 3),
-        en(2, "RF/SQL VR", "0=RF|1=SQL|2=SQL (somente modo FM)"),
+        en(2, "RF/SQL VR", "0=RF|1=SQL|2=SQL (FM mode only)"),
         en(3, "TUN/LIN PORT SELECT", "0=EXT-TUNER|1=LINEAR|2=CAT-3|3=GPO"),
         en(4, "TUNER SELECT", "0=INT|1=INT (FAST)|2=EXT|3=ATAS"),
         en(5, "CAT-1 RATE", RATE),
@@ -430,18 +430,18 @@ def _display():
         en(5, "SCREEN SAVER (BAT)", SAVER),
         en(6, "SAVER TYPE", "0=Logo|1=DIMMER|2=DISP OFF"),
         ro(7, "AUTO POWER OFF", 1,
-           "Manual: 0: OFF; 1: 0.5 - 24: 12 (hour), com 1 digito - mapeamento nao esclarecido"),
+           "Manual: 0: OFF; 1: 0.5 - 24: 12 (hour), 1 digit - mapping unclear"),
         nu(8, "LED DIMMER", 0, 20, 2),
     ]
 
 
 def _unit():
     return [
-        en(1, "POSITION UNIT", "0=dd°MM.mm'|1=dd°mm'ss''"),
+        en(1, "POSITION UNIT", "0=ddÂ°MM.mm'|1=ddÂ°mm'ss''"),
         en(2, "DISTANCE UNIT", "0=km|1=mile"),
         ro(3, "SPEED UNIT", 1, "Manual lista os codigos 0: km/h, 1: knot, 3: mph (sem o 2)"),
         en(4, "ALTITUDE UNIT", "0=m|1=ft"),
-        en(5, "TEMP UNIT", "0=°C|1=°F"),
+        en(5, "TEMP UNIT", "0=Â°C|1=Â°F"),
         en(6, "RAIN UNIT", "0=mm|1=INCH"),
         ro(7, "WIND UNIT", 1, "Manual lista os codigos 0: m/s, 2: mph (sem o 1)"),
     ]
@@ -468,7 +468,7 @@ def _vfo_color():
 def _datetime_pos():
     return [
         ro(1, "TIME ZONE", 4,
-           "Manual: -12 (-120) ... +14 (+140) h, passo 0,5 h, 4 digitos - formato exato nao detalhado"),
+           "Manual: -12 (-120) ... +14 (+140) h, 0.5 h steps, 4 digits - exact format not specified"),
         en(7, "GPS TIME SET", "0=AUTO|1=MANUAL"),
         en(8, "MY POSITION", "0=GPS|1=MANUAL"),
     ]
@@ -586,7 +586,7 @@ def _preset():
 def _bluetooth():
     return [
         en(1, "Bluetooth", OFF_ON),
-        ro(2, "Device Name : Status", 1, "Manual: P4 sem valores definidos, 1 digito"),
+        ro(2, "Device Name : Status", 1, "Manual: P4 values undefined, 1 digit"),
         en(4, "AUDIO", "0=AUTO|1=FIX"),
     ]
 
@@ -680,7 +680,7 @@ class CatError(Exception):
 
 
 class Radio:
-    """Fala com o rádio por qualquer objeto tipo pyserial.Serial.
+    """Fala com o rÃ¡dio por qualquer objeto tipo pyserial.Serial.
 
     Todo comando termina em ';'. A resposta de leitura repete o comando
     (ex.: 'EX010101+05;'). Quadros que nao comecam com o prefixo esperado
@@ -727,7 +727,7 @@ class Radio:
             while True:
                 frame = self._next_frame(deadline)
                 if frame is None:
-                    raise CatError(f"sem resposta a {cmd}")
+                    raise CatError(f"no response to {cmd}")
                 self._log("RX", frame)
                 if frame.startswith(prefix):
                     return frame
@@ -755,3 +755,4 @@ class Radio:
     def firmware(self, which=0):
         """VE<n>; -> versao (0 = MAIN CPU)."""
         return self.query(f"VE{which};", f"VE{which}")[3:-1]
+

@@ -576,6 +576,11 @@ class App(tk.Tk):
             if separator not in entry_text:
                 continue
             groups = entry_text.split(separator)
+            if (len(groups) == 2 and 1 <= len(groups[0]) <= 3
+                    and groups[0].isdigit() and 1 <= len(groups[1]) <= 2
+                    and groups[1].isdigit()):
+                # Short decimal MHz input: 14,3 or 14.3 means 14.300 MHz.
+                return int(groups[0]) * 1_000_000 + int(groups[1]) * 10 ** (6 - len(groups[1]))
             if (len(groups) <= 3 and 1 <= len(groups[0]) <= 3
                     and groups[0].isdigit()
                     and all(len(group) == 3 and group.isdigit() for group in groups[1:])):
@@ -623,8 +628,9 @@ class App(tk.Tk):
         ttk.Label(
             body,
             text=("Enter up to 9 digits. Punctuation is added automatically.\n"
-                  "Periods and commas are accepted as thousands separators.\n"
-                  "Examples: 1448 becomes 144.800.000 Hz; 14400 becomes 14.400.000 Hz; "
+                  "A period or comma can separate MHz decimals or thousands groups.\n"
+                  "Examples: 14,3 becomes 14.300.000 Hz; 1448 becomes 144.800.000 Hz; "
+                  "14400 becomes 14.400.000 Hz; "
                   "27555 becomes 27.555.000 Hz."),
             justify="left", wraplength=360,
         ).pack(anchor="w", pady=(0, 8))
@@ -636,11 +642,17 @@ class App(tk.Tk):
         ttk.Label(body, textvariable=preview_var, foreground=GRAY).pack(anchor="w", pady=(0, 8))
 
         def apply_frequency(_event=None):
-            digits = "".join(char for char in frequency_var.get() if char.isdigit())[:9]
+            entry_text = frequency_var.get().strip()
+            digits = "".join(char for char in entry_text if char.isdigit())[:9]
             if not digits:
                 messagebox.showwarning("Frequency", "Enter a frequency.", parent=dialog)
                 return "break"
-            target = self._frequency_from_entry_digits(frequency_var.get())
+            if entry_text.endswith((".", ",")):
+                messagebox.showwarning(
+                    "Frequency", "Complete the frequency after the separator.", parent=dialog
+                )
+                return "break"
+            target = self._frequency_from_entry_digits(entry_text)
             if not 30_000 <= target <= 470_000_000:
                 messagebox.showerror(
                     "Frequency out of range",
@@ -678,27 +690,47 @@ class App(tk.Tk):
             digits = "".join(char for char in original if char.isdigit())[:9]
             if not digits:
                 preview_var.set("Target frequency: —")
+            elif original.endswith((".", ",")):
+                preview_var.set("Target frequency: continue typing")
             else:
                 target = self._frequency_from_entry_digits(original)
                 if self._frequency_in_rx_range(target):
                     preview_var.set(f"Target frequency: {self._format_frequency(target)} Hz")
                 else:
                     preview_var.set("Target frequency: out of range")
-            right_padded = int(digits.ljust(9, "0")) if digits else 0
-            khz_candidate = int(digits) * 1000 if digits else 0
-            mhz_candidate = (int(digits[:3]) * 1_000_000 + int(digits[3]) * 100_000
-                             if len(digits) == 4 else 0)
-            if digits and len(digits) == 4 and self._frequency_in_rx_range(mhz_candidate):
-                masked = f"{digits[:3]}.{digits[3:]}"
-            elif (digits and len(digits) > 3
-                    and not self._frequency_in_rx_range(right_padded)
-                    and self._frequency_in_rx_range(khz_candidate)):
-                masked = f"{digits[:-3]}.{digits[-3:]}"
+            separator_count = original.count(".") + original.count(",")
+            groups = original.replace(",", ".").split(".")
+            keep_typed_groups = (
+                separator_count > 0
+                and len(groups) <= 3
+                and 1 <= len(groups[0]) <= 3
+                and groups[0].isdigit()
+                and all(len(group) <= 3 and group.isdigit() for group in groups[1:-1])
+                and (not groups[-1] or (len(groups[-1]) <= 3 and groups[-1].isdigit()))
+                and (len(groups) < 3 or len(groups[1]) == 3)
+            )
+            if keep_typed_groups:
+                masked = original.replace(",", ".")
             else:
-                masked = ".".join(digits[index:index + 3] for index in range(0, len(digits), 3))
+                right_padded = int(digits.ljust(9, "0")) if digits else 0
+                khz_candidate = int(digits) * 1000 if digits else 0
+                mhz_candidate = (int(digits[:3]) * 1_000_000 + int(digits[3]) * 100_000
+                                 if len(digits) == 4 else 0)
+                if digits and len(digits) == 4 and self._frequency_in_rx_range(mhz_candidate):
+                    masked = f"{digits[:3]}.{digits[3:]}"
+                elif (digits and len(digits) > 3
+                        and not self._frequency_in_rx_range(right_padded)
+                        and self._frequency_in_rx_range(khz_candidate)):
+                    masked = f"{digits[:-3]}.{digits[-3:]}"
+                else:
+                    masked = ".".join(digits[index:index + 3] for index in range(0, len(digits), 3))
             if masked != original:
                 frequency_var.set(masked)
-                new_cursor = digits_before_cursor + max(0, (digits_before_cursor - 1) // 3)
+                if keep_typed_groups:
+                    separators_before_cursor = sum(char in ".," for char in original[:cursor])
+                    new_cursor = digits_before_cursor + separators_before_cursor
+                else:
+                    new_cursor = digits_before_cursor + max(0, (digits_before_cursor - 1) // 3)
                 entry.icursor(min(new_cursor, len(masked)))
 
         entry.bind("<KeyRelease>", format_as_typed)

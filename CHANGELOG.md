@@ -5,6 +5,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Unreleased]
 
 ### Adicionado
+- Executável portátil `dist/FTX1CAT.exe` para Windows 10/11 x64, com instruções
+  de instalação, compatibilidade e verificação SHA-256 no README.
 - Menu de contexto na aba Memories com Cut, Copy, Paste e Clear para mover ou
   copiar dados entre linhas localmente. Clear confirma a ação e informa que o
   rádio não oferece um comando CAT de apagamento de memória.

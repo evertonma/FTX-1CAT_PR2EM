@@ -68,15 +68,25 @@
 
 ### Requirements
 
-- Windows 10/11 (the instructions below are for Windows; Linux and macOS also work).
-- Python 3.8+ installed with Tcl/Tk.
-- Git.
+- Standalone executable: Windows 10 or 11, 64-bit (x64). Python and Tcl/Tk do not need to be installed.
+- Running from source: Python 3.8+ with Tcl/Tk; Git is needed to clone the repository.
 - Yaesu FTX-1 connected to the computer by USB using the **Enhanced COM Port (CAT-1)**.
+- The Silicon Labs USB serial driver must be installed so Windows exposes the radio's CAT-1 port.
 - The radio's CAT-1 baud rate must match the application setting; the factory default is 38400 bps.
 
-### Clone and install
+### Install the Windows executable
 
-Open PowerShell in the folder where you want to store the project:
+Download [FTX1CAT.exe](https://github.com/evertonma/FTX-1CAT_PR2EM/raw/refs/heads/main/dist/FTX1CAT.exe) and save it in a folder where you want to keep the application. It is a portable, single-file build; there is no setup wizard. Double-click the file to start the app. No Python installation or administrator rights are required.
+
+This build is for 64-bit Windows 10/11 and was packaged with Python 3.13. It is not a macOS or Linux executable. Windows may report that the publisher is unverified because the file is not digitally signed.
+
+SHA-256: `842BA6260C0682B3FA709499E4F31379A251D677639FFB679949C87511022B66`
+
+Connect the FTX-1, choose its **Enhanced COM Port (CAT-1)** in the app, confirm the CAT-1 baud rate, and click **Connect**. The factory baud rate is 38400 bps. Settings and logs are stored in `%APPDATA%\FTX1CAT`.
+
+### Run from source
+
+To run the Python version instead, install Python 3.8 or newer with Tcl/Tk, then open PowerShell in the folder where you want to store the project:
 
 ```powershell
 git clone https://github.com/evertonma/FTX-1CAT_PR2EM.git
@@ -100,6 +110,8 @@ Try it without a radio:
 Other options: `--port COM4`, `--baud 38400`, `--debug` (writes CAT traffic to the log file), `--version`. The old entry point `python ftx1_cat_menu.py` still works.
 
 These commands do not require activating the virtual environment with `Activate.ps1`, avoiding PowerShell script execution policy issues.
+
+The source version can also run on Linux and macOS when Python and Tkinter are installed; the downloadable `.exe` is Windows-only.
 
 ### Settings and log file
 
@@ -170,6 +182,7 @@ FTX-1CAT_PR2EM/
 │       └── widgets.py       #   scroll frame, dial, slider helpers
 ├── tests/                   # pytest suite (runs without a radio)
 ├── docs/                    # screenshot, evaluation, CAT roadmap and the manuals as Markdown
+├── dist/FTX1CAT.exe         # portable Windows 10/11 x64 application
 ├── ftx1_cat_menu.py         # Compatibility launcher (v0.1 entry point)
 ├── AGENTS.md                # Rules for AI coding assistants and contributors
 ├── pyproject.toml           # Package metadata, pytest and ruff configuration
@@ -275,15 +288,25 @@ Developed by **Everton Machado — PR2EM**, with assistance from **OpenAI Codex*
 
 ### Pré-requisitos
 
-- Windows 10/11 (as instruções abaixo são para Windows; Linux e macOS também funcionam).
-- Python 3.8+ instalado com Tcl/Tk.
-- Git.
+- Executável: Windows 10 ou 11, 64 bits (x64). Não é necessário instalar Python ou Tcl/Tk.
+- Código-fonte: Python 3.8+ com Tcl/Tk; Git é necessário para clonar o repositório.
 - Yaesu FTX-1 conectado ao computador por USB usando a **Enhanced COM Port (CAT-1)**.
+- O driver serial USB Silicon Labs precisa estar instalado para o Windows mostrar a porta CAT-1 do rádio.
 - A taxa CAT-1 do rádio deve corresponder à selecionada no programa; o padrão de fábrica é 38400 bps.
 
-### Clonar e instalar
+### Instalar o executável para Windows
 
-Abra o PowerShell na pasta onde deseja guardar o projeto:
+Baixe o [FTX1CAT.exe](https://github.com/evertonma/FTX-1CAT_PR2EM/raw/refs/heads/main/dist/FTX1CAT.exe) e salve-o na pasta onde deseja manter o aplicativo. É uma versão portátil em arquivo único, sem instalador. Dê um clique duplo para iniciar. Não é necessário instalar Python nem ter privilégios de administrador.
+
+Esta versão é destinada ao Windows 10/11 de 64 bits e foi empacotada com Python 3.13. Não é executável para macOS ou Linux. O Windows pode informar que o editor não foi verificado porque o arquivo não possui assinatura digital.
+
+SHA-256: `842BA6260C0682B3FA709499E4F31379A251D677639FFB679949C87511022B66`
+
+Conecte o FTX-1, selecione no aplicativo a **Enhanced COM Port (CAT-1)**, confira a taxa CAT-1 e clique em **Connect**. A taxa de fábrica é 38400 bps. Configurações e logs ficam em `%APPDATA%\FTX1CAT`.
+
+### Executar a partir do código-fonte
+
+Para executar a versão Python, instale Python 3.8 ou superior com Tcl/Tk e abra o PowerShell na pasta onde deseja guardar o projeto:
 
 ```powershell
 git clone https://github.com/evertonma/FTX-1CAT_PR2EM.git
@@ -307,6 +330,8 @@ Para experimentar sem o rádio:
 Outras opções: `--port COM4`, `--baud 38400`, `--debug` (grava o tráfego CAT no arquivo de log), `--version`. O comando antigo `python ftx1_cat_menu.py` continua funcionando.
 
 Esses comandos não exigem ativar o ambiente virtual com `Activate.ps1`, evitando problemas com a política de execução de scripts do PowerShell.
+
+A versão de código-fonte também pode rodar no Linux e macOS com Python e Tkinter instalados; o arquivo `.exe` para download funciona somente no Windows.
 
 ### Configurações e arquivo de log
 
@@ -377,6 +402,7 @@ FTX-1CAT_PR2EM/
 │       └── widgets.py       #   painel rolável, dial, helpers de slider
 ├── tests/                   # Testes pytest (rodam sem rádio)
 ├── docs/                    # Captura de tela, avaliação, roteiro CAT e manuais em Markdown
+├── dist/FTX1CAT.exe         # aplicativo portátil para Windows 10/11 x64
 ├── ftx1_cat_menu.py         # Atalho de compatibilidade (entrada da v0.1)
 ├── AGENTS.md                # Regras para assistentes de IA e contribuidores
 ├── pyproject.toml           # Metadados do pacote, configuração de pytest e ruff
